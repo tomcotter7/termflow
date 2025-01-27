@@ -10,6 +10,8 @@ import (
 	"golang.org/x/term"
 )
 
+var showModeFocusedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")).Width(15).Align(lipgloss.Left)
+
 func (m *model) showModeView() string {
 	width, height, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
@@ -22,19 +24,23 @@ func (m *model) showModeView() string {
 
 			var s strings.Builder
 
-			s.WriteString("Title: " + task.Desc + "\n")
-			s.WriteString("Description: " + task.FullDesc + "\n")
-			s.WriteString("Created: " + task.Created + "\n")
-			s.WriteString("Due: " + task.Due + "\n")
-			s.WriteString("Blocked: " + fmt.Sprintf("%v", task.Blocked) + "\n")
+			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Title:"), task.Desc))
+			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Description:"), task.FullDesc))
+			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Created:"), task.Created))
+			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Due:"), task.Due))
+			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Blocked:"), fmt.Sprintf("%v", task.Blocked)))
+
+			contentWidth := max(len(task.Desc), len(task.FullDesc), len(task.Created), len(task.Due))
 
 			content := s.String()
 			contentHeight := strings.Count(content, "\n") + 1
 			topPadding := (height - contentHeight) / 8
+			leftPadding := (width - contentWidth) / 2
 			style := lipgloss.NewStyle().
 				Width(width).
-				Align(lipgloss.Center).
-				PaddingTop(topPadding)
+				Align(lipgloss.Left).
+				PaddingTop(topPadding).
+				PaddingLeft(leftPadding)
 
 			return style.Render(content)
 

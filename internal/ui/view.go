@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -41,6 +42,12 @@ func randomId() string {
 	b := make([]byte, 5)
 	rand.Read(b)
 	return hex.EncodeToString(b)
+}
+
+func sortTasks(l *[3][]string) {
+	for i := range l {
+		sort.Strings(l[i])
+	}
 }
 
 func transpose(l [3][]string) [][3]string {

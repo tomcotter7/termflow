@@ -138,6 +138,7 @@ func (m *model) normalModeView() string {
 
 	s.WriteString("╠" + strings.Repeat("═", space) + "╬" + strings.Repeat("═", space) + "╬" + strings.Repeat("═", space) + "╣\n")
 
+	sortTasks(&m.formattedTasks)
 	tt := transpose(m.formattedTasks)
 	for i := range tt {
 		tTask, iTask, dTask := tt[i][0], tt[i][1], tt[i][2]
@@ -192,6 +193,8 @@ func (m *model) normalModeView() string {
 	}
 
 	s.WriteString("╚" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╝\n")
+
+	s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • q: (q)uit\n"))
 
 	content := s.String()
 	contentHeight := strings.Count(content, "\n") + 1
