@@ -82,9 +82,16 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.textInputs[1].SetValue(task.FullDesc)
 				m.textInputs[2].SetValue(task.Due)
 			}
-		case "s":
+		case "s", "enter":
 			m.mode = "show"
-			// TODO: add 'show' mode
+    case "t":
+			item := m.formattedTasks[m.cursor.col][m.cursor.row]
+			if task, exists := m.structuredTasks[item]; exists {
+        task.Due = time.Now().Format("2006-01-02")
+				m.structuredTasks[item] = task
+				m.formattedTasks = formatTasks(m.structuredTasks)
+				m.handler.SaveTasks("default.json", m.structuredTasks)
+      }
 		case "d":
 			if len(m.formattedTasks[m.cursor.col]) == 0 {
 				return m, nil
@@ -194,7 +201,7 @@ func (m *model) normalModeView() string {
 
 	s.WriteString("╚" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╝\n")
 
-	s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • q: (q)uit\n"))
+  s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • t: (t)oday • b: (blocked) • q: (q)uit\n"))
 
 	content := s.String()
 	contentHeight := strings.Count(content, "\n") + 1
