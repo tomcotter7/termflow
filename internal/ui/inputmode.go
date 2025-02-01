@@ -14,6 +14,25 @@ import (
 	"golang.org/x/term"
 )
 
+func (m *model) updateTextInputs(msg tea.Msg) tea.Cmd {
+	cmds := make([]tea.Cmd, len(m.textInputs))
+
+	for i := range m.textInputs {
+		m.textInputs[i], cmds[i] = m.textInputs[i].Update(msg)
+	}
+
+	return tea.Batch(cmds...)
+}
+
+func (m *model) resetTextInputs() {
+	m.focusedIndex = 0
+	m.inputTaskId = ""
+	for i := range m.textInputs {
+		m.textInputs[i].Reset()
+		m.textInputs[i].Blur()
+	}
+}
+
 func (m model) inputModeView() string {
 	width, height, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
@@ -52,7 +71,7 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			m.mode = "normal"
-			m.resetInputs()
+			m.resetTextInputs()
 			return m, nil
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
@@ -63,6 +82,7 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.textInputs[2].Reset()
 					m.textInputs[2].Focus()
 					m.focusedIndex = 2
+					return m, nil
 				} else {
 					if m.inputTaskId == "" {
 						m.inputTaskId = randomId()
@@ -79,7 +99,7 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.formattedTasks = formatTasks(m.structuredTasks)
 					m.mode = "normal"
 
-					m.resetInputs()
+					m.resetTextInputs()
 					return m, nil
 				}
 			}
@@ -106,6 +126,6 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	cmd := m.updateInputs(msg)
+	cmd := m.updateTextInputs(msg)
 	return m, cmd
 }

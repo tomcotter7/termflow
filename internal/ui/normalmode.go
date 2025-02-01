@@ -11,6 +11,11 @@ import (
 	"golang.org/x/term"
 )
 
+func (m *model) saveAndUpdateTasks(filename string) {
+	m.formattedTasks = formatTasks(m.structuredTasks)
+	m.handler.SaveTasks(filename, m.structuredTasks)
+}
+
 func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -36,8 +41,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.structuredTasks[item]; exists && m.cursor.col < 2 {
 				task.Status = columnNames[m.cursor.col+1]
 				m.structuredTasks[item] = task
-				m.formattedTasks = formatTasks(m.structuredTasks)
-				m.handler.SaveTasks("default.json", m.structuredTasks)
+				m.saveAndUpdateTasks("default.json")
 			}
 
 			m.cursor.IncCol(m.formattedTasks)
@@ -51,8 +55,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.structuredTasks[item]; exists && m.cursor.col > 0 {
 				task.Status = columnNames[m.cursor.col-1]
 				m.structuredTasks[item] = task
-				m.formattedTasks = formatTasks(m.structuredTasks)
-				m.handler.SaveTasks("default.json", m.structuredTasks)
+				m.saveAndUpdateTasks("default.json")
 			}
 			m.cursor.DecCol(m.formattedTasks)
 		case "b":
@@ -60,8 +63,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.structuredTasks[item]; exists {
 				task.Blocked = !task.Blocked
 				m.structuredTasks[item] = task
-				m.formattedTasks = formatTasks(m.structuredTasks)
-				m.handler.SaveTasks("default.json", m.structuredTasks)
+				m.saveAndUpdateTasks("default.json")
 			}
 
 		case "a":
@@ -84,22 +86,21 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "s", "enter":
 			m.mode = "show"
-    case "t":
+		case "t":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.structuredTasks[item]; exists {
-        task.Due = time.Now().Format("2006-01-02")
+				task.Due = time.Now().Format("2006-01-02")
+
 				m.structuredTasks[item] = task
-				m.formattedTasks = formatTasks(m.structuredTasks)
-				m.handler.SaveTasks("default.json", m.structuredTasks)
-      }
+				m.saveAndUpdateTasks("default.json")
+			}
 		case "d":
 			if len(m.formattedTasks[m.cursor.col]) == 0 {
 				return m, nil
 			}
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			delete(m.structuredTasks, item)
-			m.formattedTasks = formatTasks(m.structuredTasks)
-			m.handler.SaveTasks("default.json", m.structuredTasks)
+			m.saveAndUpdateTasks("default.json")
 		}
 	}
 
@@ -111,18 +112,16 @@ func (m *model) normalModeView() string {
 
 	tTitle, iTitle, dTitle := "todo", "inprogress", "done"
 
-	minPadding := 1
+	minPadding := 3
 	space := max(ml, len(tTitle), len(iTitle), len(dTitle)) + minPadding + 2
 
-	if ml == 0 {
-		switch m.cursor.col {
-		case 0:
-			tTitle = "* " + tTitle
-		case 1:
-			iTitle = "* " + iTitle
-		case 2:
-			dTitle = "* " + dTitle
-		}
+	switch m.cursor.col {
+	case 0:
+		tTitle = "* " + tTitle
+	case 1:
+		iTitle = "* " + iTitle
+	case 2:
+		dTitle = "* " + dTitle
 	}
 
 	tTitle, iTitle, dTitle = addPadding(tTitle, space), addPadding(iTitle, space), addPadding(dTitle, space)
@@ -148,60 +147,43 @@ func (m *model) normalModeView() string {
 	sortTasks(&m.formattedTasks)
 	tt := transpose(m.formattedTasks)
 	for i := range tt {
-		tTask, iTask, dTask := tt[i][0], tt[i][1], tt[i][2]
+		tasks := make([]string, 3)
+		for j := range 3 {
+			task := tt[i][j]
+			taskData := m.structuredTasks[task]
 
-		tDueDate := m.structuredTasks[tTask].Due
-		iDueDate := m.structuredTasks[iTask].Due
-		dDueDate := m.structuredTasks[dTask].Due
-
-		tBlocked := m.structuredTasks[tTask].Blocked
-		iBlocked := m.structuredTasks[iTask].Blocked
-		dBlocked := m.structuredTasks[dTask].Blocked
-
-		tTask, iTask, dTask = m.structuredTasks[tTask].Desc, m.structuredTasks[iTask].Desc, m.structuredTasks[dTask].Desc
-
-		if m.cursor.row == i {
-			switch m.cursor.col {
-			case 0:
-				tTask = "> " + tTask
-			case 1:
-				iTask = "> " + iTask
-			case 2:
-				dTask = "> " + dTask
+			tasks[j] = taskData.Desc
+			if m.cursor.row == i && m.cursor.col == j {
+				if len(tasks[j]) > 0 {
+					tasks[j] = "> " + tasks[j]
+				} else {
+					tasks[j] = "--+--"
+				}
 			}
-		}
-		tTask = addPadding(tTask, space)
-		iTask = addPadding(iTask, space)
-		dTask = addPadding(dTask, space)
+			tasks[j] = addPadding(tasks[j], space)
 
-		if tDueDate == time.Now().Format("2006-01-02") && !tBlocked {
-			tTask = blueText.Render(tTask)
-		}
+			if j < 2 {
 
-		if iDueDate == time.Now().Format("2006-01-02") && !iBlocked {
-			iTask = blueText.Render(iTask)
-		}
+				if taskData.Due == time.Now().Format("2006-01-02") && !taskData.Blocked {
+					tasks[j] = blueText.Render(tasks[j])
+				}
 
-		if dDueDate == time.Now().Format("2006-01-02") && !dBlocked {
-			dTask = blueText.Render(dTask)
-		}
+				if taskData.Blocked {
+					tasks[j] = redText.Render(tasks[j])
+				}
+			} else {
+				tasks[j] = blurredStyle.Render(tasks[j])
+			}
 
-		if tBlocked {
-			tTask = redText.Render(tTask)
-		}
-		if iBlocked {
-			iTask = redText.Render(iTask)
-		}
-		if dBlocked {
-			dTask = redText.Render(dTask)
 		}
 
+		tTask, iTask, dTask := tasks[0], tasks[1], tasks[2]
 		s.WriteString(fmt.Sprintf("║%s║%s║%s║\n", tTask, iTask, dTask))
 	}
 
 	s.WriteString("╚" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╝\n")
 
-  s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • t: (t)oday • b: (blocked) • q: (q)uit\n"))
+	s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • t: (t)oday • b: (blocked) • q: (q)uit\n"))
 
 	content := s.String()
 	contentHeight := strings.Count(content, "\n") + 1

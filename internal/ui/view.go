@@ -84,25 +84,6 @@ func addPadding(ipt string, space int) string {
 	return strings.Repeat(" ", lpadding) + ipt + strings.Repeat(" ", rpadding)
 }
 
-func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.textInputs))
-
-	for i := range m.textInputs {
-		m.textInputs[i], cmds[i] = m.textInputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
-}
-
-func (m *model) resetInputs() {
-	m.focusedIndex = 0
-	m.inputTaskId = ""
-	for i := range m.textInputs {
-		m.textInputs[i].Reset()
-		m.textInputs[i].Blur()
-	}
-}
-
 func (m model) Init() tea.Cmd {
 	return nil
 }
