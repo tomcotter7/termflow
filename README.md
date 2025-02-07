@@ -27,9 +27,19 @@ There are a variety of keyboard shortcuts available for use:
 - (`s`)how: Show all details about a task
 - (`t`)oday: Set a task to be due today
 - (`b`)locked: Set a task to be blocked
+- `?`: show help
+- `:`: Go to command screen.
 
 `q` / `esc` is always to exit a screen.
 
+### Commmand Screen
+
+This is a list of the more high level commands that wouldn't fit as keyboard shortcuts. As of now we have:
+
+- `Print`, which produces a Carmack like `.plan` file in `$HOME/.termflow/plans` with information on your done tasks.
+- `Clear`, which will delete all the done tasks.
+
+This uses the lipgloss `List` component, so supports filtering.
 
 ## License
 
