@@ -32,7 +32,7 @@ There are a variety of keyboard shortcuts available for use:
 
 `q` / `esc` is always to exit a screen.
 
-### Commmand Screen
+### Command Screen
 
 This is a list of the more high level commands that wouldn't fit as keyboard shortcuts. As of now we have:
 
