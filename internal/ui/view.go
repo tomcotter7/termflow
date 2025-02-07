@@ -14,7 +14,7 @@ import (
 
 var (
 	focusedStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	blurredStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Align(lipgloss.Center)
 	cursorStyle         = focusedStyle
 	noStyle             = lipgloss.NewStyle()
 	helpStyle           = blurredStyle
@@ -95,6 +95,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleNormalModelUpdate(msg)
 	} else if m.mode == "show" {
 		return m.handleShowModeUpdate(msg)
+	} else if m.mode == "command" {
+		return m.handleCommandModeUpdate(msg)
 	}
 
 	return m, nil
@@ -107,6 +109,8 @@ func (m model) View() string {
 		return m.normalModeView()
 	} else if m.mode == "show" {
 		return m.showModeView()
+	} else if m.mode == "command" {
+		return m.commandModeView()
 	}
 
 	return ""

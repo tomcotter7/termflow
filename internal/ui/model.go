@@ -3,10 +3,18 @@ package ui
 import (
 	"log"
 
-	"github.com/tomcotter7/termflow/internal/storage"
-
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/tomcotter7/termflow/internal/storage"
 )
+
+type item struct {
+	title, desc string
+}
+
+func (i item) Title() string       { return i.title }
+func (i item) Description() string { return i.desc }
+func (i item) FilterValue() string { return i.title }
 
 type Cursor struct {
 	row int
@@ -56,7 +64,11 @@ type model struct {
 	focusedIndex    int
 	inputTaskId     string
 	mode            string
-	err             error
+	help            bool
+	commands        list.Model
+	height          int
+	width           int
+	error           error
 }
 
 func formatTasks(tasks map[string]storage.Task) [3][]string {
@@ -100,6 +112,13 @@ func NewModel() model {
 
 		ti[i] = t
 	}
+	items := []list.Item{
+		item{title: "Print", desc: "Produce a Carmark-like .plan file with all Done tasks"},
+		item{title: "Clear", desc: "Delete all Done tasks"},
+	}
+
+	commands := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	commands.Title = "Available Commands"
 
 	return model{
 		handler:         h,
@@ -107,5 +126,7 @@ func NewModel() model {
 		formattedTasks:  formatTasks(structuredTasks),
 		textInputs:      ti,
 		mode:            "normal",
+		help:            false,
+		commands:        commands,
 	}
 }

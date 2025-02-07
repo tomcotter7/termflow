@@ -2,13 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"golang.org/x/term"
 )
 
 func (m *model) saveAndUpdateTasks(filename string) {
@@ -18,6 +16,9 @@ func (m *model) saveAndUpdateTasks(filename string) {
 
 func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -101,13 +102,18 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			delete(m.structuredTasks, item)
 			m.saveAndUpdateTasks("default.json")
+		case "?":
+			m.help = !m.help
+		case ":":
+			m.mode = "command"
+			m.commands.SetSize(m.width-2, m.height-2)
 		}
 	}
 
 	return m, nil
 }
 
-func (m *model) normalModeView() string {
+func (m model) normalModeView() string {
 	ml := maxTaskLength(m.structuredTasks)
 
 	tTitle, iTitle, dTitle := "todo", "inprogress", "done"
@@ -129,12 +135,6 @@ func (m *model) normalModeView() string {
 	tTitle = redText.Render(tTitle)
 	iTitle = yellowText.Render(iTitle)
 	dTitle = greenText.Render(dTitle)
-
-	width, height, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		width = 20
-		height = 10
-	}
 
 	var s strings.Builder
 
@@ -171,10 +171,10 @@ func (m *model) normalModeView() string {
 				if taskData.Blocked {
 					tasks[j] = redText.Render(tasks[j])
 				}
+
 			} else {
 				tasks[j] = blurredStyle.Render(tasks[j])
 			}
-
 		}
 
 		tTask, iTask, dTask := tasks[0], tasks[1], tasks[2]
@@ -183,13 +183,18 @@ func (m *model) normalModeView() string {
 
 	s.WriteString("╚" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╝\n")
 
-	s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • t: (t)oday • b: (blocked) • q: (q)uit\n"))
+	if m.help {
+		s.WriteString(helpStyle.Render("\nCommands:\n"))
+		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • \nt: (t)oday • b: (b)locked • q: (q)uit • ':': command-mode • ?: hide\n"))
+	} else {
+		s.WriteString(helpStyle.Render("\n?: help\n"))
+	}
 
 	content := s.String()
 	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (height - contentHeight) / 8
+	topPadding := (m.height - 4 - contentHeight) / 8
 	style := lipgloss.NewStyle().
-		Width(width).
+		Width(m.width - 4).
 		Align(lipgloss.Center).
 		PaddingTop(topPadding)
 

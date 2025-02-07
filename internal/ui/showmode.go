@@ -12,7 +12,7 @@ import (
 
 var showModeFocusedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")).Width(15).Align(lipgloss.Left)
 
-func (m *model) showModeView() string {
+func (m model) showModeView() string {
 	width, height, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		width = 20
@@ -56,7 +56,7 @@ func (m *model) showModeView() string {
 	return style.Render(content)
 }
 
-func (m *model) handleShowModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) handleShowModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {

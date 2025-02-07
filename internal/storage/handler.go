@@ -72,3 +72,19 @@ func (h *Handler) SaveTasks(file string, tasks map[string]Task) error {
 
 	return nil
 }
+
+func (h *Handler) SavePlanFile(file string, content string) error {
+	path := filepath.Join(h.dataFolder, "plans", file)
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = os.WriteFile(path, []byte(content), 0o644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
