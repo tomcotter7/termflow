@@ -61,7 +61,7 @@ func (m model) handleShowModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q":
-			m.mode = "normal"
+			m.mode = NormalMode
 		}
 	}
 	return m, nil

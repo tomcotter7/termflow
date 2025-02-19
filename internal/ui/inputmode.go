@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -10,55 +9,28 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tomcotter7/termflow/internal/storage"
-
-	"golang.org/x/term"
 )
 
-func (m *model) updateTextInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.textInputs))
-
-	for i := range m.textInputs {
-		m.textInputs[i], cmds[i] = m.textInputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
-}
-
-func (m *model) resetTextInputs() {
-	m.focusedIndex = 0
-	m.inputTaskId = ""
-	for i := range m.textInputs {
-		m.textInputs[i].Reset()
-		m.textInputs[i].Blur()
-	}
-}
-
 func (m model) inputModeView() string {
-	width, height, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		width = 20
-		height = 10
-	}
-
 	var b strings.Builder
-	for i := range m.textInputs {
-		b.WriteString(m.textInputs[i].View())
-		if i < len(m.textInputs)-1 {
+	for i := range m.createTaskInput.textInputs.ti {
+		b.WriteString(m.createTaskInput.textInputs.ti[i].View())
+		if i < len(m.createTaskInput.textInputs.ti)-1 {
 			b.WriteRune('\n')
 		}
 	}
 	button := &blurredButton
-	if m.focusedIndex == len(m.textInputs) {
+	if m.createTaskInput.textInputs.onSubmitButton() {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 	content := b.String()
 
 	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (height - contentHeight) / 8
+	topPadding := (m.height - contentHeight) / 8
 
 	style := lipgloss.NewStyle().
-		Width(width).
+		Width(m.width).
 		Align(lipgloss.Center).
 		PaddingTop(topPadding)
 
@@ -70,62 +42,64 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			m.mode = "normal"
-			m.resetTextInputs()
+			m.mode = NormalMode
+			m.createTaskInput.textInputs.resetTextInputs()
 			return m, nil
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
 
-			if s == "enter" && m.focusedIndex == len(m.textInputs) {
-				dd, err := time.Parse("2006-01-02", m.textInputs[2].Value())
+			if s == "enter" && m.createTaskInput.textInputs.onSubmitButton() {
+				switch strings.ToLower(m.createTaskInput.textInputs.ti[2].Value()) {
+				case "today":
+					m.createTaskInput.textInputs.ti[2].SetValue(time.Now().Format("2006-01-02"))
+				case "tomorrow":
+					m.createTaskInput.textInputs.ti[2].SetValue(time.Now().Add(24 * time.Hour).Format("2006-01-02"))
+				}
+
+				dd, err := time.Parse("2006-01-02", m.createTaskInput.textInputs.ti[2].Value())
 				if err != nil {
-					m.textInputs[2].Reset()
-					m.textInputs[2].Focus()
-					m.focusedIndex = 2
+					m.createTaskInput.textInputs.focusTextInput(2)
+					m.createTaskInput.textInputs.focusedIdx = 2
 					return m, nil
 				} else {
-					if m.inputTaskId == "" {
-						m.inputTaskId = randomId()
+					if len(m.createTaskInput.inputTaskId) == 0 {
+						m.createTaskInput.inputTaskId = randomId()
 					}
 					newTask := storage.Task{
 						Status:   columnNames[m.cursor.col],
-						Desc:     m.textInputs[0].Value(),
-						FullDesc: m.textInputs[1].Value(),
+						Desc:     m.createTaskInput.textInputs.ti[0].Value(),
+						FullDesc: m.createTaskInput.textInputs.ti[1].Value(),
 						Created:  time.Now().Format("2006-01-02"),
 						Due:      dd.Format("2006-01-02"),
 					}
-					m.structuredTasks[m.inputTaskId] = newTask
-					m.handler.SaveTasks("default.json", m.structuredTasks)
+					m.structuredTasks[m.createTaskInput.inputTaskId] = newTask
+					m.handler.SaveTasks(m.project+".json", m.structuredTasks)
 					m.formattedTasks = formatTasks(m.structuredTasks)
-					m.mode = "normal"
+					m.mode = NormalMode
 
-					m.resetTextInputs()
+					m.createTaskInput.textInputs.resetTextInputs()
+					m.createTaskInput.inputTaskId = ""
 					return m, nil
 				}
 			}
 
 			if s == "up" || s == "shift+tab" {
-				m.focusedIndex = max(0, m.focusedIndex-1)
+				m.createTaskInput.textInputs.decreaseFocusedIndex()
 			} else {
-				m.focusedIndex = min(m.focusedIndex+1, len(m.textInputs))
+				m.createTaskInput.textInputs.increaseFocusedIndex()
 			}
 
-			cmds := make([]tea.Cmd, len(m.textInputs))
-			for i := 0; i <= len(m.textInputs)-1; i++ {
-				if i == m.focusedIndex {
-					cmds[i] = m.textInputs[i].Focus()
-					m.textInputs[i].PromptStyle = focusedStyle
-					m.textInputs[i].TextStyle = focusedStyle
+			for i := 0; i <= len(m.createTaskInput.textInputs.ti)-1; i++ {
+				if i == m.createTaskInput.textInputs.focusedIdx {
+					m.createTaskInput.textInputs.focusTextInput(i)
 					continue
 				}
 
-				m.textInputs[i].Blur()
-				m.textInputs[i].PromptStyle = noStyle
-				m.textInputs[i].TextStyle = noStyle
+				m.createTaskInput.textInputs.deFocusTextInput(i)
 			}
 		}
 	}
 
-	cmd := m.updateTextInputs(msg)
+	cmd := m.createTaskInput.textInputs.updateTextInputs(msg)
 	return m, cmd
 }

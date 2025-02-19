@@ -9,8 +9,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m *model) saveAndUpdateTasks(filename string) {
+func (m *model) saveAndUpdateTasks() {
 	m.formattedTasks = formatTasks(m.structuredTasks)
+	filename := m.project + ".json"
 	m.handler.SaveTasks(filename, m.structuredTasks)
 }
 
@@ -42,7 +43,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.structuredTasks[item]; exists && m.cursor.col < 2 {
 				task.Status = columnNames[m.cursor.col+1]
 				m.structuredTasks[item] = task
-				m.saveAndUpdateTasks("default.json")
+				m.saveAndUpdateTasks()
 			}
 
 			m.cursor.IncCol(m.formattedTasks)
@@ -56,7 +57,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.structuredTasks[item]; exists && m.cursor.col > 0 {
 				task.Status = columnNames[m.cursor.col-1]
 				m.structuredTasks[item] = task
-				m.saveAndUpdateTasks("default.json")
+				m.saveAndUpdateTasks()
 			}
 			m.cursor.DecCol(m.formattedTasks)
 		case "b":
@@ -64,36 +65,32 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.structuredTasks[item]; exists {
 				task.Blocked = !task.Blocked
 				m.structuredTasks[item] = task
-				m.saveAndUpdateTasks("default.json")
+				m.saveAndUpdateTasks()
 			}
 
 		case "a":
-			m.mode = "input"
-			m.textInputs[0].Focus()
-			m.textInputs[0].PromptStyle = focusedStyle
-			m.textInputs[0].TextStyle = focusedStyle
+			m.mode = InputMode
+			m.createTaskInput.textInputs.focusTextInput(0)
 		case "e":
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.structuredTasks[item]; exists {
-				m.mode = "input"
-				m.textInputs[0].Focus()
-				m.textInputs[0].PromptStyle = focusedStyle
-				m.textInputs[0].TextStyle = focusedStyle
-				m.inputTaskId = item
-				m.textInputs[0].SetValue(task.Desc)
-				m.textInputs[1].SetValue(task.FullDesc)
-				m.textInputs[2].SetValue(task.Due)
+				m.mode = InputMode
+				m.createTaskInput.textInputs.focusTextInput(0)
+				m.createTaskInput.inputTaskId = item
+				m.createTaskInput.textInputs.ti[0].SetValue(task.Desc)
+				m.createTaskInput.textInputs.ti[1].SetValue(task.FullDesc)
+				m.createTaskInput.textInputs.ti[2].SetValue(task.Due)
 			}
 		case "s", "enter":
-			m.mode = "show"
+			m.mode = ShowMode
 		case "t":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.structuredTasks[item]; exists {
 				task.Due = time.Now().Format("2006-01-02")
 
 				m.structuredTasks[item] = task
-				m.saveAndUpdateTasks("default.json")
+				m.saveAndUpdateTasks()
 			}
 		case "d":
 			if len(m.formattedTasks[m.cursor.col]) == 0 {
@@ -101,11 +98,11 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			delete(m.structuredTasks, item)
-			m.saveAndUpdateTasks("default.json")
+			m.saveAndUpdateTasks()
 		case "?":
 			m.help = !m.help
 		case ":":
-			m.mode = "command"
+			m.mode = CommandMode
 			m.commands.SetSize(m.width-2, m.height-2)
 		}
 	}
@@ -118,7 +115,7 @@ func (m model) normalModeView() string {
 
 	tTitle, iTitle, dTitle := "todo", "inprogress", "done"
 
-	minPadding := 3
+	minPadding := 2
 	space := max(ml, len(tTitle), len(iTitle), len(dTitle)) + minPadding + 2
 
 	switch m.cursor.col {
@@ -130,7 +127,7 @@ func (m model) normalModeView() string {
 		dTitle = "* " + dTitle
 	}
 
-	tTitle, iTitle, dTitle = addPadding(tTitle, space), addPadding(iTitle, space), addPadding(dTitle, space)
+	tTitle, iTitle, dTitle = addPadding(tTitle, space, true), addPadding(iTitle, space, true), addPadding(dTitle, space, true)
 
 	tTitle = redText.Render(tTitle)
 	iTitle = yellowText.Render(iTitle)
@@ -160,7 +157,7 @@ func (m model) normalModeView() string {
 					tasks[j] = "--+--"
 				}
 			}
-			tasks[j] = addPadding(tasks[j], space)
+			tasks[j] = addPadding(tasks[j], space, false)
 
 			if j < 2 {
 
@@ -181,7 +178,12 @@ func (m model) normalModeView() string {
 		s.WriteString(fmt.Sprintf("║%s║%s║%s║\n", tTask, iTask, dTask))
 	}
 
-	s.WriteString("╚" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╝\n")
+	s.WriteString("╠" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╣\n")
+
+	projectPadding := (space * 3) + 2 - len(m.project) - 1
+
+	s.WriteString("║" + " " + m.project + strings.Repeat(" ", projectPadding) + "║\n")
+	s.WriteString("╚" + strings.Repeat("═", (space*3)+2) + "╝\n")
 
 	if m.help {
 		s.WriteString(helpStyle.Render("\nCommands:\n"))

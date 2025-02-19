@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -29,7 +28,7 @@ func (m model) writeToPlanFile(tasks map[string]storage.Task) error {
 
 	content := s.String()
 	today := time.Now().Format("2006-01-02")
-	filename := today + ".plan"
+	filename := today + m.project + ".plan"
 	err := m.handler.SavePlanFile(filename, content)
 	return err
 }
@@ -44,12 +43,21 @@ func (m *model) executeCommand(command string) {
 			}
 		}
 		m.structuredTasks = newTasks
-		m.saveAndUpdateTasks("default.json")
+		m.saveAndUpdateTasks()
+		m.mode = NormalMode
 	case "print":
 		err := m.writeToPlanFile(m.structuredTasks)
 		if err != nil {
 			m.error = err
 		}
+		m.mode = NormalMode
+	case "create project":
+		m.createProjectInput.textInputs.focusTextInput(0)
+		m.mode = NewProjectMode
+	case "switch to project":
+		m.projects.SetSize(m.width-2, m.height-2)
+		m.mode = SwitchProjectMode
+
 	}
 }
 
@@ -64,13 +72,11 @@ func (m model) handleCommandModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "q":
-			m.mode = "normal"
+			m.mode = NormalMode
 			return m, nil
 		case "enter":
 			command := m.commands.SelectedItem().FilterValue()
-			fmt.Println(command)
 			m.executeCommand(command)
-			m.mode = "normal"
 			return m, nil
 		}
 	case tea.WindowSizeMsg:

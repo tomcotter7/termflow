@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Task struct {
@@ -87,4 +88,20 @@ func (h *Handler) SavePlanFile(file string, content string) error {
 	}
 
 	return nil
+}
+
+func (h Handler) ListAllProjects() ([]string, error) {
+	files, err := os.ReadDir(h.dataFolder)
+	if err != nil {
+		return nil, err
+	}
+
+	var filenames []string
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".json") {
+			filenames = append(filenames, strings.TrimSuffix(file.Name(), ".json"))
+		}
+	}
+
+	return filenames, nil
 }

@@ -75,13 +75,16 @@ func maxTaskLength(tasks map[string]storage.Task) int {
 	return maxLength
 }
 
-func addPadding(ipt string, space int) string {
+func addPadding(ipt string, space int, title bool) string {
 	diff := max(space, len(ipt)) - len(ipt)
 
-	lpadding := (diff / 2)
-	rpadding := max(space-len(ipt)-lpadding, 0)
+	if title {
+		lpadding := (diff / 2)
+		rpadding := max(space-len(ipt)-lpadding, 0)
+		return strings.Repeat(" ", lpadding) + ipt + strings.Repeat(" ", rpadding)
+	}
 
-	return strings.Repeat(" ", lpadding) + ipt + strings.Repeat(" ", rpadding)
+	return " " + ipt + strings.Repeat(" ", (diff-1))
 }
 
 func (m model) Init() tea.Cmd {
@@ -89,29 +92,47 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if m.mode == "input" {
-		return m.handleInputModelUpdate(msg)
-	} else if m.mode == "normal" {
+	switch m.mode {
+	case NormalMode:
 		return m.handleNormalModelUpdate(msg)
-	} else if m.mode == "show" {
+	case InputMode:
+		return m.handleInputModelUpdate(msg)
+	case ShowMode:
 		return m.handleShowModeUpdate(msg)
-	} else if m.mode == "command" {
+	case CommandMode:
 		return m.handleCommandModeUpdate(msg)
+	case NewProjectMode:
+		return m.handleNewProjectModeUpdate(msg)
+	case SwitchProjectMode:
+		return m.handleSwitchProjectModeUpdates(msg)
 	}
 
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "ctrl+c":
+			m.mode = NormalMode
+			return m, nil
+		}
+	}
 	return m, nil
 }
 
 func (m model) View() string {
-	if m.mode == "input" {
-		return m.inputModeView()
-	} else if m.mode == "normal" {
+	switch m.mode {
+	case NormalMode:
 		return m.normalModeView()
-	} else if m.mode == "show" {
+	case InputMode:
+		return m.inputModeView()
+	case ShowMode:
 		return m.showModeView()
-	} else if m.mode == "command" {
+	case CommandMode:
 		return m.commandModeView()
+	case NewProjectMode:
+		return m.newProjectModeView()
+	case SwitchProjectMode:
+		return m.switchProjectModeView()
 	}
 
-	return ""
+	return "You shouldn't be able to see this, either a mode is not implemented or something has gone wrong!\n\n Press (q) to go back."
 }
