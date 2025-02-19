@@ -49,6 +49,7 @@ func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.mode = NormalMode
 				m.createProjectInput.textInputs.resetTextInputs()
 				sts, err := m.handler.LoadTasks(m.project + ".json")
+				m.projects = formatProjects(m.handler)
 				if err != nil {
 					m.error = err
 				}

@@ -158,6 +158,20 @@ func formatTasks(tasks map[string]storage.Task) [3][]string {
 	return taskIds
 }
 
+func formatProjects(h *storage.Handler) list.Model {
+	projectNames, _ := h.ListAllProjects()
+	projectItems := make([]list.Item, len(projectNames))
+
+	for i, project := range projectNames {
+		projectItems[i] = item{title: project, desc: ""}
+	}
+
+	projects := list.New(projectItems, list.NewDefaultDelegate(), 0, 0)
+	projects.Title = "Available Projects"
+
+	return projects
+}
+
 func NewModel() model {
 	h, err := storage.New()
 	if err != nil {
@@ -202,16 +216,6 @@ func NewModel() model {
 	commands := list.New(commandItems, list.NewDefaultDelegate(), 0, 0)
 	commands.Title = "Available Commands"
 
-	projectNames, err := h.ListAllProjects()
-	projectItems := make([]list.Item, len(projectNames))
-
-	for i, project := range projectNames {
-		projectItems[i] = item{title: project, desc: ""}
-	}
-
-	projects := list.New(projectItems, list.NewDefaultDelegate(), 0, 0)
-	projects.Title = "Available Projects"
-
 	return model{
 		handler:            h,
 		structuredTasks:    structuredTasks,
@@ -222,6 +226,6 @@ func NewModel() model {
 		help:               false,
 		commands:           commands,
 		project:            "default",
-		projects:           projects,
+		projects:           formatProjects(h),
 	}
 }
