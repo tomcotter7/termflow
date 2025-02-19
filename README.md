@@ -38,6 +38,8 @@ This is a list of the more high level commands that wouldn't fit as keyboard sho
 
 - `Print`, which produces a Carmack like `.plan` file in `$HOME/.termflow/plans` with information on your done tasks.
 - `Clear`, which will delete all the done tasks.
+- `New Project`
+- `Switch Project`
 
 This uses the lipgloss `List` component, so supports filtering.
 
