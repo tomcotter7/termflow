@@ -28,7 +28,7 @@ func (m model) writeToPlanFile(tasks map[string]storage.Task) error {
 
 	content := s.String()
 	today := time.Now().Format("2006-01-02")
-	filename := today + m.project + ".plan"
+	filename := today + m.activeProject + ".plan"
 	err := m.handler.SavePlanFile(filename, content)
 	return err
 }
@@ -37,25 +37,25 @@ func (m *model) executeCommand(command string) {
 	switch strings.ToLower(command) {
 	case "clear":
 		newTasks := make(map[string]storage.Task)
-		for k, v := range m.structuredTasks {
+		for k, v := range m.tasks {
 			if v.Status != "done" {
 				newTasks[k] = v
 			}
 		}
-		m.structuredTasks = newTasks
+		m.tasks = newTasks
 		m.saveAndUpdateTasks()
 		m.mode = NormalMode
 	case "print":
-		err := m.writeToPlanFile(m.structuredTasks)
+		err := m.writeToPlanFile(m.tasks)
 		if err != nil {
-			m.error = err
+			m.err = err
 		}
 		m.mode = NormalMode
 	case "create project":
-		m.createProjectInput.textInputs.focusTextInput(0)
+		m.createProjectForm.textInputs.focusTextInput(0)
 		m.mode = NewProjectMode
 	case "switch to project":
-		m.projects.SetSize(m.width-2, m.height-2)
+		m.projects.SetSize(m.termWidth-2, m.termHeight-2)
 		m.mode = SwitchProjectMode
 
 	}

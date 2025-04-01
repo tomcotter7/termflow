@@ -10,24 +10,24 @@ import (
 
 func (m model) newProjectModeView() string {
 	var b strings.Builder
-	for i := range m.createProjectInput.textInputs.ti {
-		b.WriteString(m.createProjectInput.textInputs.ti[i].View())
-		if i < len(m.createProjectInput.textInputs.ti)-1 {
+	for i := range m.createProjectForm.textInputs.ti {
+		b.WriteString(m.createProjectForm.textInputs.ti[i].View())
+		if i < len(m.createProjectForm.textInputs.ti)-1 {
 			b.WriteRune('\n')
 		}
 	}
 	button := &blurredButton
-	if m.createProjectInput.textInputs.onSubmitButton() {
+	if m.createProjectForm.textInputs.onSubmitButton() {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 	content := b.String()
 
 	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.height - contentHeight) / 8
+	topPadding := (m.termHeight - contentHeight) / 8
 
 	style := lipgloss.NewStyle().
-		Width(m.width).
+		Width(m.termWidth).
 		Align(lipgloss.Center).
 		PaddingTop(topPadding)
 
@@ -40,38 +40,44 @@ func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			m.mode = NormalMode
-			m.createProjectInput.textInputs.resetTextInputs()
+			m.createProjectForm.textInputs.resetTextInputs()
 			return m, nil
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
-			if s == "enter" && m.createProjectInput.textInputs.onSubmitButton() {
-				m.project = m.createProjectInput.textInputs.ti[0].Value()
+			if s == "enter" && m.createProjectForm.textInputs.onSubmitButton() {
+				m.activeProject = m.createProjectForm.textInputs.ti[0].Value()
 				m.mode = NormalMode
-				m.createProjectInput.textInputs.resetTextInputs()
-				sts, err := m.handler.LoadTasks(m.project + ".json")
-				m.projects = formatProjects(m.handler)
+				m.createProjectForm.textInputs.resetTextInputs()
+				sts, err := m.handler.LoadTasks(m.activeProject + ".json")
 				if err != nil {
-					m.error = err
+
+					m.err = err
+					return m, nil
 				}
-				m.structuredTasks = sts
+				m.projects, err = newProjectListModel(m.handler)
+				if err != nil {
+					m.err = err
+					return m, nil
+				}
+				m.tasks = sts
 				return m, nil
 			}
 			if s == "up" || s == "shift+tab" {
-				m.createProjectInput.textInputs.decreaseFocusedIndex()
+				m.createProjectForm.textInputs.decreaseFocusedIndex()
 			} else {
-				m.createProjectInput.textInputs.increaseFocusedIndex()
+				m.createProjectForm.textInputs.increaseFocusedIndex()
 			}
-			for i := 0; i <= len(m.createProjectInput.textInputs.ti)-1; i++ {
-				if i == m.createTaskInput.textInputs.focusedIdx {
-					m.createProjectInput.textInputs.focusTextInput(i)
+			for i := 0; i <= len(m.createProjectForm.textInputs.ti)-1; i++ {
+				if i == m.createTaskForm.textInputs.focusedIdx {
+					m.createProjectForm.textInputs.focusTextInput(i)
 					continue
 				}
 
-				m.createProjectInput.textInputs.deFocusTextInput(i)
+				m.createProjectForm.textInputs.deFocusTextInput(i)
 			}
 		}
 	}
 
-	cmd := m.createProjectInput.textInputs.updateTextInputs(msg)
+	cmd := m.createProjectForm.textInputs.updateTextInputs(msg)
 	return m, cmd
 }

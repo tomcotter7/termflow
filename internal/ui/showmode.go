@@ -20,7 +20,7 @@ func (m model) showModeView() string {
 	}
 	if m.cursor.row < len(m.formattedTasks[m.cursor.col]) {
 		item := m.formattedTasks[m.cursor.col][m.cursor.row]
-		if task, exists := m.structuredTasks[item]; exists {
+		if task, exists := m.tasks[item]; exists {
 
 			var s strings.Builder
 

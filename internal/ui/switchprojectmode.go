@@ -18,16 +18,19 @@ func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) 
 			m.mode = NormalMode
 			return m, nil
 		case "enter":
-			m.project = m.projects.SelectedItem().FilterValue()
-			sts, err := m.handler.LoadTasks(m.project + ".json")
+			m.activeProject = m.projects.SelectedItem().FilterValue()
+			m.handler.SaveCurrent(m.activeProject)
+			sts, err := m.handler.LoadTasks(m.activeProject + ".json")
 			if err != nil {
-				m.error = err
+				m.err = err
 				m.mode = NormalMode
 				return m, nil
 			}
-			m.structuredTasks = sts
-			m.formattedTasks = formatTasks(m.structuredTasks)
+			m.tasks = sts
+			m.formattedTasks = formatTasks(m.tasks)
 			m.mode = NormalMode
+			m.cursor.row = 0
+			m.cursor.col = 0
 			return m, nil
 		}
 	case tea.WindowSizeMsg:

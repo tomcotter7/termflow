@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -11,26 +13,32 @@ import (
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
+func randomId() string {
+	b := make([]byte, 5)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 func (m model) inputModeView() string {
 	var b strings.Builder
-	for i := range m.createTaskInput.textInputs.ti {
-		b.WriteString(m.createTaskInput.textInputs.ti[i].View())
-		if i < len(m.createTaskInput.textInputs.ti)-1 {
+	for i := range m.createTaskForm.textInputs.ti {
+		b.WriteString(m.createTaskForm.textInputs.ti[i].View())
+		if i < len(m.createTaskForm.textInputs.ti)-1 {
 			b.WriteRune('\n')
 		}
 	}
 	button := &blurredButton
-	if m.createTaskInput.textInputs.onSubmitButton() {
+	if m.createTaskForm.textInputs.onSubmitButton() {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
 	content := b.String()
 
 	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.height - contentHeight) / 8
+	topPadding := (m.termHeight - contentHeight) / 8
 
 	style := lipgloss.NewStyle().
-		Width(m.width).
+		Width(m.termWidth).
 		Align(lipgloss.Center).
 		PaddingTop(topPadding)
 
@@ -43,63 +51,63 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			m.mode = NormalMode
-			m.createTaskInput.textInputs.resetTextInputs()
+			m.createTaskForm.textInputs.resetTextInputs()
 			return m, nil
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
 
-			if s == "enter" && m.createTaskInput.textInputs.onSubmitButton() {
-				switch strings.ToLower(m.createTaskInput.textInputs.ti[2].Value()) {
+			if s == "enter" && m.createTaskForm.textInputs.onSubmitButton() {
+				switch strings.ToLower(m.createTaskForm.textInputs.ti[2].Value()) {
 				case "today":
-					m.createTaskInput.textInputs.ti[2].SetValue(time.Now().Format("2006-01-02"))
+					m.createTaskForm.textInputs.ti[2].SetValue(time.Now().Format("2006-01-02"))
 				case "tomorrow":
-					m.createTaskInput.textInputs.ti[2].SetValue(time.Now().Add(24 * time.Hour).Format("2006-01-02"))
+					m.createTaskForm.textInputs.ti[2].SetValue(time.Now().Add(24 * time.Hour).Format("2006-01-02"))
 				}
 
-				dd, err := time.Parse("2006-01-02", m.createTaskInput.textInputs.ti[2].Value())
+				dd, err := time.Parse("2006-01-02", m.createTaskForm.textInputs.ti[2].Value())
 				if err != nil {
-					m.createTaskInput.textInputs.focusTextInput(2)
-					m.createTaskInput.textInputs.focusedIdx = 2
+					m.createTaskForm.textInputs.focusTextInput(2)
+					m.createTaskForm.textInputs.focusedIdx = 2
 					return m, nil
 				} else {
-					if len(m.createTaskInput.inputTaskId) == 0 {
-						m.createTaskInput.inputTaskId = randomId()
+					if len(m.createTaskForm.inputTaskId) == 0 {
+						m.createTaskForm.inputTaskId = randomId()
 					}
 					newTask := storage.Task{
 						Status:   columnNames[m.cursor.col],
-						Desc:     m.createTaskInput.textInputs.ti[0].Value(),
-						FullDesc: m.createTaskInput.textInputs.ti[1].Value(),
+						Desc:     m.createTaskForm.textInputs.ti[0].Value(),
+						FullDesc: m.createTaskForm.textInputs.ti[1].Value(),
 						Created:  time.Now().Format("2006-01-02"),
 						Due:      dd.Format("2006-01-02"),
 					}
-					m.structuredTasks[m.createTaskInput.inputTaskId] = newTask
-					m.handler.SaveTasks(m.project+".json", m.structuredTasks)
-					m.formattedTasks = formatTasks(m.structuredTasks)
+					m.tasks[m.createTaskForm.inputTaskId] = newTask
+					m.handler.SaveTasks(m.activeProject+".json", m.tasks)
+					m.formattedTasks = formatTasks(m.tasks)
 					m.mode = NormalMode
 
-					m.createTaskInput.textInputs.resetTextInputs()
-					m.createTaskInput.inputTaskId = ""
+					m.createTaskForm.textInputs.resetTextInputs()
+					m.createTaskForm.inputTaskId = ""
 					return m, nil
 				}
 			}
 
 			if s == "up" || s == "shift+tab" {
-				m.createTaskInput.textInputs.decreaseFocusedIndex()
+				m.createTaskForm.textInputs.decreaseFocusedIndex()
 			} else {
-				m.createTaskInput.textInputs.increaseFocusedIndex()
+				m.createTaskForm.textInputs.increaseFocusedIndex()
 			}
 
-			for i := 0; i <= len(m.createTaskInput.textInputs.ti)-1; i++ {
-				if i == m.createTaskInput.textInputs.focusedIdx {
-					m.createTaskInput.textInputs.focusTextInput(i)
+			for i := 0; i <= len(m.createTaskForm.textInputs.ti)-1; i++ {
+				if i == m.createTaskForm.textInputs.focusedIdx {
+					m.createTaskForm.textInputs.focusTextInput(i)
 					continue
 				}
 
-				m.createTaskInput.textInputs.deFocusTextInput(i)
+				m.createTaskForm.textInputs.deFocusTextInput(i)
 			}
 		}
 	}
 
-	cmd := m.createTaskInput.textInputs.updateTextInputs(msg)
+	cmd := m.createTaskForm.textInputs.updateTextInputs(msg)
 	return m, cmd
 }

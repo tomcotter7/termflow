@@ -2,24 +2,68 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tomcotter7/termflow/internal/storage"
 )
 
+func sortTasks(l *[3][]string) {
+	for i := range l {
+		sort.Strings(l[i])
+	}
+}
+
+func transpose(l [3][]string) [][3]string {
+	max_len := max(len(l[0]), len(l[1]), len(l[2]))
+	l_t := make([][3]string, max_len)
+	for i := range max_len {
+		l_t[i] = [3]string{}
+		for j := range 3 {
+			if i < len(l[j]) {
+				l_t[i][j] = l[j][i]
+			}
+		}
+	}
+
+	return l_t
+}
+
+func addPadding(ipt string, space int, title bool) string {
+	diff := max(space, len(ipt)) - len(ipt)
+
+	if title {
+		lpadding := (diff / 2)
+		rpadding := max(space-len(ipt)-lpadding, 0)
+		return strings.Repeat(" ", lpadding) + ipt + strings.Repeat(" ", rpadding)
+	}
+
+	return " " + ipt + strings.Repeat(" ", (diff-1))
+}
+
+func maxTaskLength(tasks map[string]storage.Task) int {
+	maxLength := 0
+	for _, v := range tasks {
+		maxLength = max(maxLength, len(v.Desc))
+	}
+
+	return maxLength
+}
+
 func (m *model) saveAndUpdateTasks() {
-	m.formattedTasks = formatTasks(m.structuredTasks)
-	filename := m.project + ".json"
-	m.handler.SaveTasks(filename, m.structuredTasks)
+	m.formattedTasks = formatTasks(m.tasks)
+	filename := m.activeProject + ".json"
+	m.handler.SaveTasks(filename, m.tasks)
 }
 
 func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		m.termWidth = msg.Width
+		m.termHeight = msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -40,9 +84,9 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 
-			if task, exists := m.structuredTasks[item]; exists && m.cursor.col < 2 {
+			if task, exists := m.tasks[item]; exists && m.cursor.col < 2 {
 				task.Status = columnNames[m.cursor.col+1]
-				m.structuredTasks[item] = task
+				m.tasks[item] = task
 				m.saveAndUpdateTasks()
 			}
 
@@ -54,42 +98,42 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.structuredTasks[item]; exists && m.cursor.col > 0 {
+			if task, exists := m.tasks[item]; exists && m.cursor.col > 0 {
 				task.Status = columnNames[m.cursor.col-1]
-				m.structuredTasks[item] = task
+				m.tasks[item] = task
 				m.saveAndUpdateTasks()
 			}
 			m.cursor.DecCol(m.formattedTasks)
 		case "b":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.structuredTasks[item]; exists {
+			if task, exists := m.tasks[item]; exists {
 				task.Blocked = !task.Blocked
-				m.structuredTasks[item] = task
+				m.tasks[item] = task
 				m.saveAndUpdateTasks()
 			}
 
 		case "a":
 			m.mode = InputMode
-			m.createTaskInput.textInputs.focusTextInput(0)
+			m.createTaskForm.textInputs.focusTextInput(0)
 		case "e":
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.structuredTasks[item]; exists {
+			if task, exists := m.tasks[item]; exists {
 				m.mode = InputMode
-				m.createTaskInput.textInputs.focusTextInput(0)
-				m.createTaskInput.inputTaskId = item
-				m.createTaskInput.textInputs.ti[0].SetValue(task.Desc)
-				m.createTaskInput.textInputs.ti[1].SetValue(task.FullDesc)
-				m.createTaskInput.textInputs.ti[2].SetValue(task.Due)
+				m.createTaskForm.textInputs.focusTextInput(0)
+				m.createTaskForm.inputTaskId = item
+				m.createTaskForm.textInputs.ti[0].SetValue(task.Desc)
+				m.createTaskForm.textInputs.ti[1].SetValue(task.FullDesc)
+				m.createTaskForm.textInputs.ti[2].SetValue(task.Due)
 			}
 		case "s", "enter":
 			m.mode = ShowMode
 		case "t":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.structuredTasks[item]; exists {
+			if task, exists := m.tasks[item]; exists {
 				task.Due = time.Now().Format("2006-01-02")
 
-				m.structuredTasks[item] = task
+				m.tasks[item] = task
 				m.saveAndUpdateTasks()
 			}
 		case "d":
@@ -97,13 +141,13 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			delete(m.structuredTasks, item)
+			delete(m.tasks, item)
 			m.saveAndUpdateTasks()
 		case "?":
-			m.help = !m.help
+			m.showHelp = !m.showHelp
 		case ":":
 			m.mode = CommandMode
-			m.commands.SetSize(m.width-2, m.height-2)
+			m.commands.SetSize(m.termWidth-2, m.termHeight-2)
 		}
 	}
 
@@ -111,7 +155,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) normalModeView() string {
-	ml := maxTaskLength(m.structuredTasks)
+	ml := maxTaskLength(m.tasks)
 
 	tTitle, iTitle, dTitle := "todo", "inprogress", "done"
 
@@ -147,7 +191,7 @@ func (m model) normalModeView() string {
 		tasks := make([]string, 3)
 		for j := range 3 {
 			task := tt[i][j]
-			taskData := m.structuredTasks[task]
+			taskData := m.tasks[task]
 
 			tasks[j] = taskData.Desc
 			if m.cursor.row == i && m.cursor.col == j {
@@ -180,12 +224,16 @@ func (m model) normalModeView() string {
 
 	s.WriteString("╠" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╣\n")
 
-	projectPadding := (space * 3) + 2 - len(m.project) - 1
+	projectPadding := (space * 3) + 2 - len(m.activeProject) - 1
 
-	s.WriteString("║" + " " + m.project + strings.Repeat(" ", projectPadding) + "║\n")
+	s.WriteString("║" + " " + m.activeProject + strings.Repeat(" ", projectPadding) + "║\n")
+	if m.err != nil {
+		errorPadding := (space * 3) + 2 - len(m.err.Error()) - 1
+		s.WriteString("║" + " " + m.err.Error() + strings.Repeat(" ", errorPadding) + "║\n")
+	}
 	s.WriteString("╚" + strings.Repeat("═", (space*3)+2) + "╝\n")
 
-	if m.help {
+	if m.showHelp {
 		s.WriteString(helpStyle.Render("\nCommands:\n"))
 		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • \nt: (t)oday • b: (b)locked • q: (q)uit • ':': command-mode • ?: hide\n"))
 	} else {
@@ -194,9 +242,9 @@ func (m model) normalModeView() string {
 
 	content := s.String()
 	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.height - 4 - contentHeight) / 8
+	topPadding := (m.termHeight - 4 - contentHeight) / 8
 	style := lipgloss.NewStyle().
-		Width(m.width - 4).
+		Width(m.termWidth - 4).
 		Align(lipgloss.Center).
 		PaddingTop(topPadding)
 
