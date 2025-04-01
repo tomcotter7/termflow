@@ -1,7 +1,6 @@
 package ui
 
 import (
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -11,10 +10,14 @@ var (
 	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Align(lipgloss.Center)
 	noStyle      = lipgloss.NewStyle()
 	helpStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Align(lipgloss.Center)
-	redText      = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#B33B3B"))
-	yellowText   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#EABD30"))
-	greenText    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#30EA40"))
-	blueText     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE"))
+
+	redText    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#B33B3B"))
+	yellowText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#EABD30"))
+	greenText  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#30EA40"))
+	blueText   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE"))
+
+	blueTextRedBackground = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE")).Background(lipgloss.Color("#B33B3B"))
+	redBackground         = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#B33B3B"))
 
 	focusedButton = focusedStyle.Render("[ Submit ]")
 	blurredButton = blurredStyle.Render("[ Submit ]")

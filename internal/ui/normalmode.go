@@ -129,9 +129,19 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "s", "enter":
 			m.mode = ShowMode
 		case "t":
+			if len(m.formattedTasks[m.cursor.col]) == 0 {
+				return m, nil
+			}
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item]; exists {
-				task.Due = time.Now().Format("2006-01-02")
+
+				today := time.Now().Format("2006-01-02")
+
+				if task.Due != today {
+					task.Due = today
+				} else {
+					task.Due = ""
+				}
 
 				m.tasks[item] = task
 				m.saveAndUpdateTasks()
@@ -204,15 +214,17 @@ func (m model) normalModeView() string {
 			tasks[j] = addPadding(tasks[j], space, false)
 
 			if j < 2 {
-
-				if taskData.Due == time.Now().Format("2006-01-02") && !taskData.Blocked {
-					tasks[j] = blueText.Render(tasks[j])
+				if taskData.Due == time.Now().Format("2006-01-02") {
+					if !taskData.Blocked {
+						tasks[j] = blueText.Render(tasks[j])
+					} else {
+						tasks[j] = blueTextRedBackground.Render(tasks[j])
+					}
+				} else {
+					if taskData.Blocked {
+						tasks[j] = redBackground.Render(tasks[j])
+					}
 				}
-
-				if taskData.Blocked {
-					tasks[j] = redText.Render(tasks[j])
-				}
-
 			} else {
 				tasks[j] = blurredStyle.Render(tasks[j])
 			}
