@@ -57,8 +57,10 @@ func (m *model) executeCommand(command string) {
 	case "switch to project":
 		m.projects.SetSize(m.termWidth-2, m.termHeight-2)
 		m.mode = SwitchProjectMode
-
+	case "show daily work %":
+		m.mode = ShowWorkPercentageMode
 	}
+
 }
 
 func (m model) commandModeView() string {

@@ -2,22 +2,15 @@ package ui
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"golang.org/x/term"
 )
 
 var showModeFocusedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")).Width(15).Align(lipgloss.Left)
 
 func (m model) showModeView() string {
-	width, height, err := term.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		width = 20
-		height = 10
-	}
 	if m.cursor.row < len(m.formattedTasks[m.cursor.col]) {
 		item := m.formattedTasks[m.cursor.col][m.cursor.row]
 		if task, exists := m.tasks[item]; exists {
@@ -34,10 +27,10 @@ func (m model) showModeView() string {
 
 			content := s.String()
 			contentHeight := strings.Count(content, "\n") + 1
-			topPadding := (height - contentHeight) / 8
-			leftPadding := (width - contentWidth) / 2
+			topPadding := (m.termHeight - contentHeight) / 8
+			leftPadding := (m.termWidth - contentWidth) / 2
 			style := lipgloss.NewStyle().
-				Width(width).
+				Width(m.termWidth).
 				Align(lipgloss.Left).
 				PaddingTop(topPadding).
 				PaddingLeft(leftPadding)
@@ -48,9 +41,9 @@ func (m model) showModeView() string {
 	}
 	content := "Nothing to see here!"
 	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (height - contentHeight) / 8
+	topPadding := (m.termHeight - contentHeight) / 8
 	style := lipgloss.NewStyle().
-		Width(width).
+		Width(m.termWidth).
 		Align(lipgloss.Center).
 		PaddingTop(topPadding)
 	return style.Render(content)
@@ -58,6 +51,9 @@ func (m model) showModeView() string {
 
 func (m model) handleShowModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.termWidth = msg.Width
+		m.termHeight = msg.Height
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q":

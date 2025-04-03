@@ -33,7 +33,12 @@ func transpose(l [3][]string) [][3]string {
 }
 
 func addPadding(ipt string, space int, title bool) string {
-	diff := max(space, len(ipt)) - len(ipt)
+	diff := space - len(ipt)
+
+	if diff <= 0 {
+		newS := " " + ipt[:(space-4)] + "..."
+		return newS
+	}
 
 	if title {
 		lpadding := (diff / 2)
@@ -44,7 +49,7 @@ func addPadding(ipt string, space int, title bool) string {
 	return " " + ipt + strings.Repeat(" ", (diff-1))
 }
 
-func maxTaskLength(tasks map[string]storage.Task) int {
+func getLongestTaskLength(tasks map[string]storage.Task) int {
 	maxLength := 0
 	for _, v := range tasks {
 		maxLength = max(maxLength, len(v.Desc))
@@ -165,12 +170,17 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) normalModeView() string {
-	ml := maxTaskLength(m.tasks)
-
+	ll := getLongestTaskLength(m.tasks)
 	tTitle, iTitle, dTitle := "todo", "inprogress", "done"
 
+	maxTaskLength := (m.termWidth - 8) / 3
+
 	minPadding := 2
-	space := max(ml, len(tTitle), len(iTitle), len(dTitle)) + minPadding + 2
+	space := max(ll, len(tTitle), len(iTitle), len(dTitle)) + minPadding + 2
+
+	if maxTaskLength > 0 {
+		space = min(space, maxTaskLength)
+	}
 
 	switch m.cursor.col {
 	case 0:
@@ -241,8 +251,10 @@ func (m model) normalModeView() string {
 	s.WriteString("║" + " " + m.activeProject + strings.Repeat(" ", projectPadding) + "║\n")
 	if m.err != nil {
 		errorPadding := (space * 3) + 2 - len(m.err.Error()) - 1
-		s.WriteString("║" + " " + m.err.Error() + strings.Repeat(" ", errorPadding) + "║\n")
+		s.WriteString("║" + " " + redBackground.Render(m.err.Error()) + strings.Repeat(" ", errorPadding) + "║\n")
 	}
+	wpPadding := (space * 3) + 2 - len(m.wp) - 1
+	s.WriteString("║" + " " + blueBackground.Render(m.wp) + strings.Repeat(" ", wpPadding) + "║\n")
 	s.WriteString("╚" + strings.Repeat("═", (space*3)+2) + "╝\n")
 
 	if m.showHelp {

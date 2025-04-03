@@ -18,6 +18,7 @@ var (
 
 	blueTextRedBackground = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE")).Background(lipgloss.Color("#B33B3B"))
 	redBackground         = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#B33B3B"))
+	blueBackground        = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#2563BE"))
 
 	focusedButton = focusedStyle.Render("[ Submit ]")
 	blurredButton = blurredStyle.Render("[ Submit ]")
@@ -51,6 +52,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleNewProjectModeUpdate(msg)
 	case SwitchProjectMode:
 		return m.handleSwitchProjectModeUpdates(msg)
+	case ShowWorkPercentageMode:
+		return m.handleWPModeUpdate(msg)
 	}
 
 	switch msg := msg.(type) {
@@ -78,6 +81,8 @@ func (m model) View() string {
 		return m.newProjectModeView()
 	case SwitchProjectMode:
 		return m.switchProjectModeView()
+	case ShowWorkPercentageMode:
+		return m.showWPModeView()
 	}
 
 	return "Something has gone wrong!\n\nReport at bug at https://github.com/tomcotter7/termflow/issues\n\n Press (q) to go back."

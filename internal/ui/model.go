@@ -17,6 +17,7 @@ const (
 	CommandMode
 	NewProjectMode
 	SwitchProjectMode
+	ShowWorkPercentageMode
 	ErrorMode
 )
 
@@ -50,6 +51,7 @@ type model struct {
 	termWidth      int
 	activeProject  string
 	err            error
+	wp             string
 
 	createTaskForm    CreateTaskForm
 	createProjectForm CreateProjectForm
@@ -95,6 +97,7 @@ func newCommandsListModel() list.Model {
 		item{title: "Clear", desc: "Delete all done tasks."},
 		item{title: "Create Project", desc: "Create a new project & switch to it."},
 		item{title: "Switch to Project", desc: "Switch to a different project."},
+		item{title: "Show Daily Work %", desc: "Show the Daily Work Percentage"},
 	}
 
 	commands := list.New(commandItems, list.NewDefaultDelegate(), 0, 0)
