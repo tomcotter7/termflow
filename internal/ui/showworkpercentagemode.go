@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -37,15 +39,19 @@ func getCurrentWorkPercentage() string {
 }
 
 func (m model) showWPModeView() string {
-	wp := "Amount of day spent 🔒in: " + blueText.Render(getCurrentWorkPercentage())
+	var s strings.Builder
+	s.WriteString("Amount of day spent 🔒in: " + blueText.Render(getCurrentWorkPercentage()) + "\n")
+	s.WriteString("Tasks completed: " + blueText.Render(strconv.Itoa(len(m.formattedTasks[2]))))
 
-	contentHeight := 1
+	content := s.String()
+
+	contentHeight := strings.Count(content, "\n")
 
 	topPadding := (m.termHeight - contentHeight) / 8
 
 	style := lipgloss.NewStyle().Width(m.termWidth).Align(lipgloss.Center).Padding(topPadding).Bold(true)
 
-	return style.Render(wp)
+	return style.Render(content)
 }
 
 func (m model) handleWPModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
