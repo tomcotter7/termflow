@@ -230,6 +230,12 @@ func (m model) normalModeView() string {
 					} else {
 						tasks[j] = blueTextRedBackground.Render(tasks[j])
 					}
+				} else if taskData.Due < time.Now().Format("2006-01-02") {
+					if !taskData.Blocked {
+						tasks[j] = orangeText.Render(tasks[j])
+					} else {
+						tasks[j] = orangeTextRedBackground.Render(tasks[j])
+					}
 				} else {
 					if taskData.Blocked {
 						tasks[j] = redBackground.Render(tasks[j])

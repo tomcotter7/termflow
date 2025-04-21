@@ -13,12 +13,14 @@ var (
 
 	redText    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#B33B3B"))
 	yellowText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#EABD30"))
+	orangeText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff3c00"))
 	greenText  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#30EA40"))
 	blueText   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE"))
 
-	blueTextRedBackground = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE")).Background(lipgloss.Color("#B33B3B"))
-	redBackground         = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#B33B3B"))
-	blueBackground        = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#2563BE"))
+	blueTextRedBackground   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#2563BE")).Background(lipgloss.Color("#B33B3B"))
+	orangeTextRedBackground = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff3c00")).Background(lipgloss.Color("#B33B3B"))
+	redBackground           = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#B33B3B"))
+	blueBackground          = lipgloss.NewStyle().Bold(true).Background(lipgloss.Color("#2563BE"))
 
 	focusedButton = focusedStyle.Render("[ Submit ]")
 	blurredButton = blurredStyle.Render("[ Submit ]")
