@@ -23,11 +23,18 @@ func (ti *TextInputs) resetTextInputs() {
 }
 
 func (ti *TextInputs) decreaseFocusedIndex() {
+	ti.deFocusTextInput(ti.focusedIdx)
 	ti.focusedIdx = max(0, ti.focusedIdx-1)
+	ti.focusTextInput(ti.focusedIdx)
 }
 
 func (ti *TextInputs) increaseFocusedIndex() {
+	ti.deFocusTextInput(ti.focusedIdx)
 	ti.focusedIdx = min(ti.focusedIdx+1, len(ti.ti))
+
+	if ti.focusedIdx < len(ti.ti) {
+		ti.focusTextInput(ti.focusedIdx)
+	}
 }
 
 func (ti *TextInputs) focusTextInput(idx int) {

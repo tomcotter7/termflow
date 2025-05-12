@@ -50,13 +50,14 @@ func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.createProjectForm.textInputs.resetTextInputs()
 				sts, err := m.handler.LoadTasks(m.activeProject + ".json")
 				if err != nil {
-
 					m.err = err
+					m.mode = ErrorMode
 					return m, nil
 				}
 				m.projects, err = newProjectListModel(m.handler)
 				if err != nil {
 					m.err = err
+					m.mode = ErrorMode
 					return m, nil
 				}
 				m.tasks = sts

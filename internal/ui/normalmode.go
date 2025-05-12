@@ -145,7 +145,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if task.Due != today {
 					task.Due = today
 				} else {
-					task.Due = ""
+					task.Due = "none"
 				}
 
 				m.tasks[item] = task
@@ -158,6 +158,17 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			delete(m.tasks, item)
 			m.saveAndUpdateTasks()
+		case "i":
+			if len(m.formattedTasks[m.cursor.col]) == 0 {
+				return m, nil
+			}
+
+			item := m.formattedTasks[m.cursor.col][m.cursor.row]
+			if task, exists := m.tasks[item]; exists {
+				task.IgnoreFromPlan = !task.IgnoreFromPlan
+				m.tasks[item] = task
+				m.saveAndUpdateTasks()
+			}
 		case "?":
 			m.showHelp = !m.showHelp
 		case ":":
@@ -242,7 +253,11 @@ func (m model) normalModeView() string {
 					}
 				}
 			} else {
-				tasks[j] = blurredStyle.Render(tasks[j])
+				if taskData.IgnoreFromPlan {
+					tasks[j] = excludedDoneStyle.Render(tasks[j])
+				} else {
+					tasks[j] = doneStyle.Render(tasks[j])
+				}
 			}
 		}
 

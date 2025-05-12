@@ -2,13 +2,24 @@ package ui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-var showModeFocusedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")).Width(15).Align(lipgloss.Left)
+const labelWidth = 25
+
+var showModeFocusedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")).Align(lipgloss.Left).Width(labelWidth)
+
+func trimToLength(s string, maxLength int) string {
+	if len(s) > maxLength {
+		s = s[:maxLength-3] + "..."
+	}
+
+	return s
+}
 
 func (m model) showModeView() string {
 	if m.cursor.row < len(m.formattedTasks[m.cursor.col]) {
@@ -17,11 +28,12 @@ func (m model) showModeView() string {
 
 			var s strings.Builder
 
-			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Title:"), task.Desc))
-			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Description:"), task.FullDesc))
-			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Created:"), task.Created))
-			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Due:"), task.Due))
-			s.WriteString(fmt.Sprintf("%-12s %s\n", showModeFocusedStyle.Render("Blocked:"), fmt.Sprintf("%v", task.Blocked)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Title:"), trimToLength(task.Desc, m.termWidth-labelWidth)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Description:"), trimToLength(task.FullDesc, m.termWidth-labelWidth)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Created:"), trimToLength(task.Created, m.termWidth-labelWidth)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Due:"), trimToLength(task.Due, m.termWidth-labelWidth)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Blocked:"), trimToLength(strconv.FormatBool(task.Blocked), m.termWidth-labelWidth)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Ignore from .plan:"), trimToLength(strconv.FormatBool(task.IgnoreFromPlan), m.termWidth-labelWidth)))
 
 			contentWidth := max(len(task.Desc), len(task.FullDesc), len(task.Created), len(task.Due))
 

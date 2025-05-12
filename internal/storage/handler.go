@@ -16,12 +16,13 @@ const (
 )
 
 type Task struct {
-	Status   string `json:"status"`
-	Desc     string `json:"desc"`
-	FullDesc string `json:"fulldesc"`
-	Created  string `json:"created"`
-	Due      string `json:"due"`
-	Blocked  bool   `json:"blocked"`
+	Status         string `json:"status"`
+	Desc           string `json:"desc"`
+	FullDesc       string `json:"fulldesc"`
+	Created        string `json:"created"`
+	Due            string `json:"due"`
+	Blocked        bool   `json:"blocked"`
+	IgnoreFromPlan bool   `json:"ignorefromplan"`
 }
 
 type Handler struct {

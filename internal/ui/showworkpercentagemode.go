@@ -12,25 +12,40 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func getCurrentWorkPercentage() string {
+func getCellPos() string {
+	day := time.Now().Day()
+	col := ""
+	if day >= 26 {
+		col += "A"
+		day -= 26
+	}
+
+	col += string(rune(day + 65))
+
+	return col + "34"
+}
+
+func (m *model) getCurrentWorkPercentage() string {
 	sheetName := time.Now().Format("2006January")
-	cellPos := string(rune(time.Now().Day()+65)) + "34"
+	cellPos := getCellPos()
 
 	spreadsheetID := "1g9gV_a_j03qAw5ZepbY9RfnButjeXeFbB_cKq7BlTp8"
 
 	url := fmt.Sprintf("https://docs.google.com/spreadsheets/d/%s/export?format=csv&sheet=%s&range=%s", spreadsheetID, sheetName, cellPos)
+
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return ""
+		m.err = err
+		return err.Error()
 	}
 	defer resp.Body.Close()
 
 	reader := csv.NewReader(resp.Body)
 	records, err := reader.ReadAll()
 	if err != nil {
-		fmt.Println("Error:", err)
-		return ""
+		m.err = err
+		m.mode = ErrorMode
+		return err.Error()
 	}
 
 	workPercentage := records[0][0]
@@ -38,10 +53,24 @@ func getCurrentWorkPercentage() string {
 	return workPercentage
 }
 
+func (m model) getDoneFromAllProjects() string {
+	projects, _ := m.handler.ListAllProjects()
+
+	totalDone := 0
+	for i := range projects {
+		project := projects[i]
+		tasks, _ := m.handler.LoadTasks(project + ".json")
+		fTasks := formatTasks(tasks)
+		totalDone += len(fTasks[2])
+	}
+
+	return strconv.Itoa(totalDone)
+}
+
 func (m model) showWPModeView() string {
 	var s strings.Builder
-	s.WriteString("Amount of day spent 🔒in: " + blueText.Render(getCurrentWorkPercentage()) + "\n")
-	s.WriteString("Tasks completed: " + blueText.Render(strconv.Itoa(len(m.formattedTasks[2]))))
+	s.WriteString("Amount of day spent 🔒in: " + blueText.Render(m.getCurrentWorkPercentage()) + "\n")
+	s.WriteString("Tasks completed: " + blueText.Render(m.getDoneFromAllProjects()))
 
 	content := s.String()
 

@@ -23,7 +23,7 @@ func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) 
 			sts, err := m.handler.LoadTasks(m.activeProject + ".json")
 			if err != nil {
 				m.err = err
-				m.mode = NormalMode
+				m.mode = ErrorMode
 				return m, nil
 			}
 			m.tasks = sts

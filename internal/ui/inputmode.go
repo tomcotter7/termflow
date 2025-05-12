@@ -62,12 +62,19 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.createTaskForm.textInputs.ti[2].SetValue(time.Now().Format("2006-01-02"))
 				case "tomorrow":
 					m.createTaskForm.textInputs.ti[2].SetValue(time.Now().Add(24 * time.Hour).Format("2006-01-02"))
+				case "end-of-week":
+					today := time.Now().Weekday()
+					friday := time.Friday
+					diff := int(friday - today)
+					if diff <= 0 {
+						diff += 7
+					}
+					m.createTaskForm.textInputs.ti[2].SetValue(time.Now().Add(time.Hour * 24 * time.Duration(diff)).Format("2006-01-02"))
 				}
 
 				dd, err := time.Parse("2006-01-02", m.createTaskForm.textInputs.ti[2].Value())
 				if err != nil {
 					m.createTaskForm.textInputs.focusTextInput(2)
-					m.createTaskForm.textInputs.focusedIdx = 2
 					return m, nil
 				} else {
 					if len(m.createTaskForm.inputTaskId) == 0 {
@@ -95,15 +102,6 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.createTaskForm.textInputs.decreaseFocusedIndex()
 			} else {
 				m.createTaskForm.textInputs.increaseFocusedIndex()
-			}
-
-			for i := 0; i <= len(m.createTaskForm.textInputs.ti)-1; i++ {
-				if i == m.createTaskForm.textInputs.focusedIdx {
-					m.createTaskForm.textInputs.focusTextInput(i)
-					continue
-				}
-
-				m.createTaskForm.textInputs.deFocusTextInput(i)
 			}
 		}
 	}

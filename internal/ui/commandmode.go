@@ -15,7 +15,7 @@ func (m model) writeToPlanFile(tasks map[string]storage.Task) error {
 	var s strings.Builder
 
 	for k, v := range tasks {
-		if v.Status == "done" {
+		if v.Status == "done" && !v.IgnoreFromPlan {
 			s.WriteString("Task ID: " + k + "\n")
 			s.WriteString("Title: " + v.Desc + "\n")
 			if len(v.FullDesc) > 1 {
@@ -48,6 +48,7 @@ func (m *model) executeCommand(command string) {
 	case "print":
 		err := m.writeToPlanFile(m.tasks)
 		if err != nil {
+			m.mode = ErrorMode
 			m.err = err
 		}
 		m.mode = NormalMode
@@ -60,7 +61,6 @@ func (m *model) executeCommand(command string) {
 	case "show daily work %":
 		m.mode = ShowWorkPercentageMode
 	}
-
 }
 
 func (m model) commandModeView() string {

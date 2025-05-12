@@ -11,6 +11,9 @@ var (
 	noStyle      = lipgloss.NewStyle()
 	helpStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Align(lipgloss.Center)
 
+	doneStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Align(lipgloss.Center)
+	excludedDoneStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Align(lipgloss.Center).Strikethrough(true)
+
 	redText    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#B33B3B"))
 	yellowText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#EABD30"))
 	orangeText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff3c00"))
@@ -41,6 +44,10 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.err != nil || m.mode == ErrorMode {
+		return m.handleErrorModeUpdate(msg)
+	}
+
 	switch m.mode {
 	case NormalMode:
 		return m.handleNormalModelUpdate(msg)
@@ -70,6 +77,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.err != nil || m.mode == ErrorMode {
+		return m.errorModeView()
+	}
+
 	switch m.mode {
 	case NormalMode:
 		return m.normalModeView()
