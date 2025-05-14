@@ -119,17 +119,17 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "a":
 			m.mode = InputMode
-			m.createTaskForm.textInputs.focusTextInput(0)
+			m.createTaskForm.inputs.focusInput(0)
 		case "e":
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item]; exists {
 				m.mode = InputMode
-				m.createTaskForm.textInputs.focusTextInput(0)
+				m.createTaskForm.inputs.focusInput(0)
 				m.createTaskForm.inputTaskId = item
-				m.createTaskForm.textInputs.ti[0].SetValue(task.Desc)
-				m.createTaskForm.textInputs.ti[1].SetValue(task.FullDesc)
-				m.createTaskForm.textInputs.ti[2].SetValue(task.Due)
+				m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
+				m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
+				m.createTaskForm.inputs.ti[1].SetValue(task.Due)
 			}
 		case "s", "enter":
 			m.mode = ShowMode
