@@ -38,15 +38,19 @@ func (ti *TextInputs) increaseFocusedIndex() {
 }
 
 func (ti *TextInputs) focusTextInput(idx int) {
-	ti.ti[idx].Focus()
-	ti.ti[idx].PromptStyle = focusedStyle
-	ti.ti[idx].TextStyle = focusedStyle
+	if idx < len(ti.ti) {
+		ti.ti[idx].Focus()
+		ti.ti[idx].PromptStyle = focusedStyle
+		ti.ti[idx].TextStyle = focusedStyle
+	}
 }
 
 func (ti *TextInputs) deFocusTextInput(idx int) {
-	ti.ti[idx].Blur()
-	ti.ti[idx].PromptStyle = noStyle
-	ti.ti[idx].TextStyle = noStyle
+	if idx < len(ti.ti) {
+		ti.ti[idx].Blur()
+		ti.ti[idx].PromptStyle = noStyle
+		ti.ti[idx].TextStyle = noStyle
+	}
 }
 
 func (ti *TextInputs) updateTextInputs(msg tea.Msg) tea.Cmd {
