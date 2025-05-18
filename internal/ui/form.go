@@ -34,7 +34,7 @@ func (f *Form) deFocusInput(idx int) {
 		f.ti[idx].Blur()
 		f.ti[idx].PromptStyle = noStyle
 		f.ti[idx].TextStyle = noStyle
-	} else {
+	} else if idx < len(f.ti)+len(f.ta) {
 		idx -= len(f.ti)
 		f.ta[idx].Blur()
 	}
@@ -45,7 +45,7 @@ func (f *Form) focusInput(idx int) {
 		f.ti[idx].Focus()
 		f.ti[idx].PromptStyle = focusedStyle
 		f.ti[idx].TextStyle = focusedStyle
-	} else {
+	} else if idx < len(f.ti)+len(f.ta) {
 		idx -= len(f.ti)
 		f.ta[idx].Focus()
 	}

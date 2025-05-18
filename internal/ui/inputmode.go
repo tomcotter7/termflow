@@ -25,6 +25,7 @@ func (m model) inputModeView() string {
 		b.WriteString(m.createTaskForm.inputs.ti[i].View())
 		b.WriteRune('\n')
 	}
+	b.WriteRune('\n')
 	for i := range m.createTaskForm.inputs.ta {
 		b.WriteString(m.createTaskForm.inputs.ta[i].View())
 		if i < len(m.createTaskForm.inputs.ta)-1 {
@@ -57,10 +58,10 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.mode = NormalMode
 			m.createTaskForm.inputs.reset()
 			return m, nil
-		case "tab", "shift+tab", "enter", "up", "down":
+		case "tab", "shift+tab", "alt+enter":
 			s := msg.String()
 
-			if s == "enter" && m.createTaskForm.inputs.onSubmitButton() {
+			if s == "alt+enter" && m.createTaskForm.inputs.onSubmitButton() {
 				var dd string
 				switch strings.ToLower(m.createTaskForm.inputs.ti[1].Value()) {
 				case "today":
@@ -109,11 +110,12 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 
-			if s == "up" || s == "shift+tab" {
+			if s == "shift+tab" {
 				m.createTaskForm.inputs.decreaseFocusedIndex()
 			} else {
 				m.createTaskForm.inputs.increaseFocusedIndex()
 			}
+			return m, nil
 		}
 	}
 
