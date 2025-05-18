@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/charmbracelet/bubbles/list"
+
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/tomcotter7/termflow/internal/storage"
 )
@@ -34,7 +36,7 @@ type CreateProjectForm struct {
 }
 
 type CreateTaskForm struct {
-	textInputs  TextInputs
+	inputs      Form
 	inputTaskId string
 }
 
@@ -106,21 +108,25 @@ func newCommandsListModel() list.Model {
 }
 
 func newCreateTaskForm() CreateTaskForm {
-	task_inputs := make([]textinput.Model, 3)
-	for i := range task_inputs {
+	text_inputs := make([]textinput.Model, 2)
+	for i := range text_inputs {
 		t := textinput.New()
 		switch i {
 		case 0:
 			t.Placeholder = "Short Description"
-		case 1:
-			t.Placeholder = "Full Description"
 		case 2:
 			t.Placeholder = "Due Date"
 		}
 
-		task_inputs[i] = t
+		text_inputs[i] = t
 	}
-	cti := CreateTaskForm{textInputs: TextInputs{ti: task_inputs}}
+
+	text_areas := make([]textarea.Model, 1)
+	t := textarea.New()
+	t.Placeholder = "Full Description"
+	text_areas[0] = t
+
+	cti := CreateTaskForm{inputs: Form{ti: text_inputs, ta: text_areas}}
 	return cti
 }
 

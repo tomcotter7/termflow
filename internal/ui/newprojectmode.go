@@ -68,14 +68,6 @@ func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.createProjectForm.textInputs.increaseFocusedIndex()
 			}
-			for i := 0; i <= len(m.createProjectForm.textInputs.ti)-1; i++ {
-				if i == m.createTaskForm.textInputs.focusedIdx {
-					m.createProjectForm.textInputs.focusTextInput(i)
-					continue
-				}
-
-				m.createProjectForm.textInputs.deFocusTextInput(i)
-			}
 		}
 	}
 

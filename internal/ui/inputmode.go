@@ -21,14 +21,19 @@ func randomId() string {
 
 func (m model) inputModeView() string {
 	var b strings.Builder
-	for i := range m.createTaskForm.textInputs.ti {
-		b.WriteString(m.createTaskForm.textInputs.ti[i].View())
-		if i < len(m.createTaskForm.textInputs.ti)-1 {
+	for i := range m.createTaskForm.inputs.ti {
+		b.WriteString(m.createTaskForm.inputs.ti[i].View())
+		b.WriteRune('\n')
+	}
+	b.WriteRune('\n')
+	for i := range m.createTaskForm.inputs.ta {
+		b.WriteString(m.createTaskForm.inputs.ta[i].View())
+		if i < len(m.createTaskForm.inputs.ta)-1 {
 			b.WriteRune('\n')
 		}
 	}
 	button := &blurredButton
-	if m.createTaskForm.textInputs.onSubmitButton() {
+	if m.createTaskForm.inputs.onSubmitButton() {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
@@ -51,21 +56,20 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			m.mode = NormalMode
-			m.createTaskForm.textInputs.resetTextInputs()
+			m.createTaskForm.inputs.reset()
 			return m, nil
-		case "tab", "shift+tab", "enter", "up", "down":
+		case "tab", "shift+tab", "alt+enter":
 			s := msg.String()
 
-			if s == "enter" && m.createTaskForm.textInputs.onSubmitButton() {
+			if s == "alt+enter" && m.createTaskForm.inputs.onSubmitButton() {
 				var dd string
-
-				switch strings.ToLower(m.createTaskForm.textInputs.ti[2].Value()) {
+				switch strings.ToLower(m.createTaskForm.inputs.ti[1].Value()) {
 				case "today":
 					dd = time.Now().Format("2006-01-02")
-					m.createTaskForm.textInputs.ti[2].SetValue(dd)
+					m.createTaskForm.inputs.ti[1].SetValue(dd)
 				case "tomorrow":
 					dd = time.Now().Add(24 * time.Hour).Format("2006-01-02")
-					m.createTaskForm.textInputs.ti[2].SetValue(dd)
+					m.createTaskForm.inputs.ti[1].SetValue(dd)
 				case "end-of-week":
 					today := time.Now().Weekday()
 					friday := time.Friday
@@ -74,18 +78,16 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 						diff += 7
 					}
 					dd = time.Now().Add(time.Hour * 24 * time.Duration(diff)).Format("2006-01-02")
-					m.createTaskForm.textInputs.ti[2].SetValue(dd)
+					m.createTaskForm.inputs.ti[1].SetValue(dd)
 				case "none":
 					dd = "none"
 				default:
-
-					date, err := time.Parse("2006-01-02", m.createTaskForm.textInputs.ti[2].Value())
+					date, err := time.Parse("2006-01-02", m.createTaskForm.inputs.ti[1].Value())
 					if err != nil {
-						m.createTaskForm.textInputs.focusTextInput(2)
+						m.createTaskForm.inputs.focusInput(1)
 						return m, nil
 					}
 					dd = date.Format("2006-01-02")
-
 				}
 
 				if len(m.createTaskForm.inputTaskId) == 0 {
@@ -93,8 +95,8 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				newTask := storage.Task{
 					Status:   columnNames[m.cursor.col],
-					Desc:     m.createTaskForm.textInputs.ti[0].Value(),
-					FullDesc: m.createTaskForm.textInputs.ti[1].Value(),
+					Desc:     m.createTaskForm.inputs.ti[0].Value(),
+					FullDesc: m.createTaskForm.inputs.ta[0].Value(),
 					Created:  time.Now().Format("2006-01-02"),
 					Due:      dd,
 				}
@@ -103,19 +105,20 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.formattedTasks = formatTasks(m.tasks)
 				m.mode = NormalMode
 
-				m.createTaskForm.textInputs.resetTextInputs()
+				m.createTaskForm.inputs.reset()
 				m.createTaskForm.inputTaskId = ""
 				return m, nil
 			}
 
-			if s == "up" || s == "shift+tab" {
-				m.createTaskForm.textInputs.decreaseFocusedIndex()
+			if s == "shift+tab" {
+				m.createTaskForm.inputs.decreaseFocusedIndex()
 			} else {
-				m.createTaskForm.textInputs.increaseFocusedIndex()
+				m.createTaskForm.inputs.increaseFocusedIndex()
 			}
+			return m, nil
 		}
 	}
 
-	cmd := m.createTaskForm.textInputs.updateTextInputs(msg)
+	cmd := m.createTaskForm.inputs.updateInputs(msg)
 	return m, cmd
 }
