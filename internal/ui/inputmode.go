@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,13 +91,21 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 					dd = date.Format("2006-01-02")
 				}
 
+				priority, err := strconv.Atoi(m.createTaskForm.inputs.ti[2].Value())
+				if err != nil {
+					m.createTaskForm.inputs.focusInput(2)
+					return m, nil
+				}
+
 				if len(m.createTaskForm.inputTaskId) == 0 {
 					m.createTaskForm.inputTaskId = randomId()
 				}
 				newTask := storage.Task{
+					ID:       m.createTaskForm.inputTaskId,
 					Status:   columnNames[m.cursor.col],
 					Desc:     m.createTaskForm.inputs.ti[0].Value(),
 					FullDesc: m.createTaskForm.inputs.ta[0].Value(),
+					Priority: priority,
 					Created:  time.Now().Format("2006-01-02"),
 					Due:      dd,
 				}
