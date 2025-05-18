@@ -24,7 +24,7 @@ func trimToLength(s string, maxLength int) string {
 func (m model) showModeView() string {
 	if m.cursor.row < len(m.formattedTasks[m.cursor.col]) {
 		item := m.formattedTasks[m.cursor.col][m.cursor.row]
-		if task, exists := m.tasks[item]; exists {
+		if task, exists := m.tasks[item.ID]; exists {
 
 			var s strings.Builder
 
@@ -33,6 +33,7 @@ func (m model) showModeView() string {
 			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Created:"), trimToLength(task.Created, m.termWidth-labelWidth)))
 			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Due:"), trimToLength(task.Due, m.termWidth-labelWidth)))
 			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Blocked:"), trimToLength(strconv.FormatBool(task.Blocked), m.termWidth-labelWidth)))
+			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Priority"), trimToLength(strconv.Itoa(task.Priority), m.termWidth-labelWidth)))
 			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Ignore from .plan:"), trimToLength(strconv.FormatBool(task.IgnoreFromPlan), m.termWidth-labelWidth)))
 
 			contentWidth := max(len(task.Desc), len(task.FullDesc), len(task.Created), len(task.Due))

@@ -16,6 +16,7 @@ const (
 )
 
 type Task struct {
+	ID             string `json:"id,omitempty"`
 	Status         string `json:"status"`
 	Desc           string `json:"desc"`
 	FullDesc       string `json:"fulldesc"`
@@ -23,6 +24,7 @@ type Task struct {
 	Due            string `json:"due"`
 	Blocked        bool   `json:"blocked"`
 	IgnoreFromPlan bool   `json:"ignorefromplan"`
+	Priority       int    `json:"priority"`
 }
 
 type Handler struct {
@@ -73,7 +75,13 @@ func (h *Handler) LoadTasks(file string) (map[string]Task, error) {
 	if err := json.NewDecoder(f).Decode(&data); err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
 	}
-	return data, nil
+
+	finalData := make(map[string]Task, len(data))
+	for id, taskValue := range data {
+		taskValue.ID = id         // Set the ID field on the copy
+		finalData[id] = taskValue // Store the task with its ID populated
+	}
+	return finalData, nil
 }
 
 func (h *Handler) SaveTasks(file string, tasks map[string]Task) error {

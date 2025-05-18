@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"slices"
 
 	"github.com/charmbracelet/bubbles/list"
 
@@ -43,7 +44,7 @@ type CreateTaskForm struct {
 type model struct {
 	handler        *storage.Handler
 	tasks          map[string]storage.Task
-	formattedTasks [3][]string
+	formattedTasks [3][]storage.Task
 	cursor         Cursor
 	mode           Mode
 	showHelp       bool
@@ -59,21 +60,49 @@ type model struct {
 	createProjectForm CreateProjectForm
 }
 
-func formatTasks(tasks map[string]storage.Task) [3][]string {
-	taskIds := [3][]string{{}, {}, {}}
+func priorityOrdering(t_a storage.Task, t_b storage.Task) int {
+	if t_a.Priority < t_b.Priority {
+		return -1
+	} else if t_a.Priority > t_b.Priority {
+		return 1
+	}
 
-	for id, task := range tasks {
+	if t_a.ID < t_b.ID {
+		return -1
+	} else if t_a.ID > t_b.ID {
+		return 1
+	}
+
+	return 0
+}
+
+func formatTasks(tasks map[string]storage.Task) [3][]storage.Task {
+	fTasks := [3][]storage.Task{{}, {}, {}}
+
+	todoTasks := []storage.Task{}
+	ipTasks := []storage.Task{}
+	doneTasks := []storage.Task{}
+
+	for _, task := range tasks {
 		switch task.Status {
 		case "todo":
-			taskIds[0] = append(taskIds[0], id)
+			todoTasks = append(todoTasks, task)
 		case "inprogress":
-			taskIds[1] = append(taskIds[1], id)
+			ipTasks = append(ipTasks, task)
 		case "done":
-			taskIds[2] = append(taskIds[2], id)
+			doneTasks = append(doneTasks, task)
 		}
 	}
 
-	return taskIds
+	slices.SortFunc(todoTasks, priorityOrdering)
+	slices.SortFunc(ipTasks, priorityOrdering)
+	slices.SortFunc(doneTasks, priorityOrdering)
+
+	fTasks[0] = todoTasks
+	fTasks[1] = ipTasks
+	fTasks[2] = doneTasks
+
+	return fTasks
 }
 
 func newProjectListModel(h *storage.Handler) (list.Model, error) {
@@ -108,14 +137,16 @@ func newCommandsListModel() list.Model {
 }
 
 func newCreateTaskForm() CreateTaskForm {
-	text_inputs := make([]textinput.Model, 2)
+	text_inputs := make([]textinput.Model, 3)
 	for i := range text_inputs {
 		t := textinput.New()
 		switch i {
 		case 0:
 			t.Placeholder = "Short Description"
-		case 2:
+		case 1:
 			t.Placeholder = "Due Date"
+		case 2:
+			t.Placeholder = "Priority"
 		}
 
 		text_inputs[i] = t

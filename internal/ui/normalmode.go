@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,17 +11,11 @@ import (
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
-func sortTasks(l *[3][]string) {
-	for i := range l {
-		sort.Strings(l[i])
-	}
-}
-
-func transpose(l [3][]string) [][3]string {
+func transpose(l [3][]storage.Task) [][3]storage.Task {
 	max_len := max(len(l[0]), len(l[1]), len(l[2]))
-	l_t := make([][3]string, max_len)
+	l_t := make([][3]storage.Task, max_len)
 	for i := range max_len {
-		l_t[i] = [3]string{}
+		l_t[i] = [3]storage.Task{}
 		for j := range 3 {
 			if i < len(l[j]) {
 				l_t[i][j] = l[j][i]
@@ -89,9 +83,9 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 
-			if task, exists := m.tasks[item]; exists && m.cursor.col < 2 {
+			if task, exists := m.tasks[item.ID]; exists && m.cursor.col < 2 {
 				task.Status = columnNames[m.cursor.col+1]
-				m.tasks[item] = task
+				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 			}
 
@@ -103,17 +97,17 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item]; exists && m.cursor.col > 0 {
+			if task, exists := m.tasks[item.ID]; exists && m.cursor.col > 0 {
 				task.Status = columnNames[m.cursor.col-1]
-				m.tasks[item] = task
+				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 			}
 			m.cursor.DecCol(m.formattedTasks)
 		case "b":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item]; exists {
+			if task, exists := m.tasks[item.ID]; exists {
 				task.Blocked = !task.Blocked
-				m.tasks[item] = task
+				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 			}
 
@@ -123,13 +117,14 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "e":
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item]; exists {
+			if task, exists := m.tasks[item.ID]; exists {
 				m.mode = InputMode
 				m.createTaskForm.inputs.focusInput(0)
-				m.createTaskForm.inputTaskId = item
+				m.createTaskForm.inputTaskId = item.ID
 				m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
 				m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
 				m.createTaskForm.inputs.ti[1].SetValue(task.Due)
+				m.createTaskForm.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
 			}
 		case "s", "enter":
 			m.mode = ShowMode
@@ -138,7 +133,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item]; exists {
+			if task, exists := m.tasks[item.ID]; exists {
 
 				today := time.Now().Format("2006-01-02")
 
@@ -148,7 +143,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 					task.Due = "none"
 				}
 
-				m.tasks[item] = task
+				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 			}
 		case "d":
@@ -156,7 +151,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			delete(m.tasks, item)
+			delete(m.tasks, item.ID)
 			m.saveAndUpdateTasks()
 		case "i":
 			if len(m.formattedTasks[m.cursor.col]) == 0 {
@@ -164,9 +159,9 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item]; exists {
+			if task, exists := m.tasks[item.ID]; exists {
 				task.IgnoreFromPlan = !task.IgnoreFromPlan
-				m.tasks[item] = task
+				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 			}
 		case "?":
@@ -216,13 +211,11 @@ func (m model) normalModeView() string {
 
 	s.WriteString("╠" + strings.Repeat("═", space) + "╬" + strings.Repeat("═", space) + "╬" + strings.Repeat("═", space) + "╣\n")
 
-	sortTasks(&m.formattedTasks)
 	tt := transpose(m.formattedTasks)
 	for i := range tt {
 		tasks := make([]string, 3)
 		for j := range 3 {
-			task := tt[i][j]
-			taskData := m.tasks[task]
+			taskData := tt[i][j]
 
 			tasks[j] = taskData.Desc
 			if m.cursor.row == i && m.cursor.col == j {
@@ -280,7 +273,7 @@ func (m model) normalModeView() string {
 
 	if m.showHelp {
 		s.WriteString(helpStyle.Render("\nCommands:\n"))
-		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • \nt: (t)oday • b: (b)locked • q: (q)uit • ':': command-mode • ?: hide\n"))
+		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • \nt: (t)oday • b: (b)locked • i: (i)gnore from .plan • q: (q)uit • ':': command-mode • ?: hide\n"))
 	} else {
 		s.WriteString(helpStyle.Render("\n?: help\n"))
 	}
