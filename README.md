@@ -27,6 +27,7 @@ There are a variety of keyboard shortcuts available for use:
 - (`s`)how: Show all details about a task
 - (`t`)oday: Set a task to be due today
 - (`b`)locked: Set a task to be blocked
+- (i)gnore: Set a task to be ignored from the .plan files
 - `?`: show help
 - `:`: Go to command screen.
 
