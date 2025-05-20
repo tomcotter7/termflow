@@ -3,6 +3,7 @@ package ui
 import (
 	"log"
 	"slices"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 
@@ -61,6 +62,13 @@ type model struct {
 }
 
 func priorityOrdering(t_a storage.Task, t_b storage.Task) int {
+	today := time.Now().Format("2006-01-02")
+	if (t_a.Due == today) && (t_b.Due != today) {
+		return -1
+	} else if (t_a.Due != today) && (t_b.Due == today) {
+		return 1
+	}
+
 	if t_a.Priority < t_b.Priority {
 		return -1
 	} else if t_a.Priority > t_b.Priority {
