@@ -45,7 +45,14 @@ func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "tab", "shift+tab", "enter", "up", "down":
 			s := msg.String()
 			if s == "enter" && m.createProjectForm.textInputs.onSubmitButton() {
-				m.activeProject = m.createProjectForm.textInputs.ti[0].Value()
+				newProject := m.createProjectForm.textInputs.ti[0].Value()
+				if len(newProject) == 0 {
+					m.createProjectForm.textInputs.resetTextInputs()
+					m.createProjectForm.textInputs.focusTextInput(0)
+				}
+
+				m.activeProject = newProject
+				m.handler.SaveCurrent(newProject)
 				m.mode = NormalMode
 				m.createProjectForm.textInputs.resetTextInputs()
 				sts, err := m.handler.LoadTasks(m.activeProject + ".json")
@@ -54,13 +61,14 @@ func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.mode = ErrorMode
 					return m, nil
 				}
+				m.tasks = sts
+				m.formattedTasks = formatTasks(m.tasks)
 				m.projects, err = newProjectListModel(m.handler)
 				if err != nil {
 					m.err = err
 					m.mode = ErrorMode
 					return m, nil
 				}
-				m.tasks = sts
 				return m, nil
 			}
 			if s == "up" || s == "shift+tab" {
