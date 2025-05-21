@@ -15,8 +15,9 @@ import (
 )
 
 func randomId() string {
-	b := make([]byte, 5)
+	b := make([]byte, 16)
 	rand.Read(b)
+
 	return hex.EncodeToString(b)
 }
 
