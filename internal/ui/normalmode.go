@@ -114,6 +114,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "a":
 			m.mode = InputMode
 			m.createTaskForm.inputs.focusInput(0)
+			m.createTaskForm.inputTaskId = ""
 		case "e":
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
