@@ -91,17 +91,25 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 
-			if len(m.createTaskForm.inputTaskId) == 0 {
-				m.createTaskForm.inputTaskId = randomId()
+			created := time.Now().Format("2006-01-02")
+			blocked := false
+			id := randomId()
+
+			if len(m.createTaskForm.inputTaskId) > 0 {
+				created = m.tasks[m.createTaskForm.inputTaskId].Created
+				blocked = m.tasks[m.createTaskForm.inputTaskId].Blocked
+				id = m.createTaskForm.inputTaskId
 			}
+
 			newTask := storage.Task{
-				ID:       m.createTaskForm.inputTaskId,
+				ID:       id,
 				Status:   columnNames[m.cursor.col],
 				Desc:     m.createTaskForm.inputs.ti[0].Value(),
 				FullDesc: m.createTaskForm.inputs.ta[0].Value(),
 				Priority: priority,
-				Created:  time.Now().Format("2006-01-02"),
 				Due:      dd,
+				Created:  created,
+				Blocked:  blocked,
 			}
 			m.tasks[m.createTaskForm.inputTaskId] = newTask
 			m.handler.SaveTasks(m.activeProject+".json", m.tasks)
@@ -117,6 +125,7 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc":
 			m.mode = NormalMode
 			m.createTaskForm.inputs.reset()
+			m.createTaskForm.inputTaskId = ""
 			return m, nil
 		case "tab", "shift+tab":
 			s := msg.String()
