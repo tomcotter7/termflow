@@ -87,22 +87,20 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				task.Status = columnNames[m.cursor.col+1]
 				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
+				m.cursor.IncCol(m.formattedTasks)
 			}
-
-			m.cursor.IncCol(m.formattedTasks)
 
 		case "r":
 			if len(m.formattedTasks[m.cursor.col]) <= m.cursor.row {
 				return m, nil
 			}
-
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item.ID]; exists && m.cursor.col > 0 {
 				task.Status = columnNames[m.cursor.col-1]
 				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
+				m.cursor.DecCol(m.formattedTasks)
 			}
-			m.cursor.DecCol(m.formattedTasks)
 		case "b":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item.ID]; exists {
@@ -116,7 +114,6 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.createTaskForm.inputs.focusInput(0)
 			m.createTaskForm.inputTaskId = ""
 		case "e":
-
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item.ID]; exists {
 				m.mode = InputMode
