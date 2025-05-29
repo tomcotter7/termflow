@@ -95,6 +95,8 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			blocked := false
 			id := randomId()
 
+			fmt.Println(m.createTaskForm.inputTaskId)
+
 			if len(m.createTaskForm.inputTaskId) > 0 {
 				created = m.tasks[m.createTaskForm.inputTaskId].Created
 				blocked = m.tasks[m.createTaskForm.inputTaskId].Blocked
@@ -111,7 +113,7 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Created:  created,
 				Blocked:  blocked,
 			}
-			m.tasks[m.createTaskForm.inputTaskId] = newTask
+			m.tasks[id] = newTask
 			m.handler.SaveTasks(m.activeProject+".json", m.tasks)
 			m.formattedTasks = formatTasks(m.tasks)
 			m.mode = NormalMode
