@@ -163,6 +163,7 @@ func newCreateTaskForm() CreateTaskForm {
 	text_areas := make([]textarea.Model, 1)
 	t := textarea.New()
 	t.Placeholder = "Full Description"
+	t.CharLimit = 0
 	text_areas[0] = t
 
 	cti := CreateTaskForm{inputs: Form{ti: text_inputs, ta: text_areas}}

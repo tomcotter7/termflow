@@ -23,6 +23,8 @@ func randomId() string {
 
 func (m model) inputModeView() string {
 	var b strings.Builder
+
+	m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
 	for i := range m.createTaskForm.inputs.ti {
 		b.WriteString(m.createTaskForm.inputs.ti[i].View())
 		b.WriteRune('\n')
