@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
@@ -22,6 +23,7 @@ const (
 	NewProjectMode
 	SwitchProjectMode
 	ShowWorkPercentageMode
+	AddBragMode
 	ErrorMode
 )
 
@@ -42,6 +44,13 @@ type CreateTaskForm struct {
 	inputTaskId string
 }
 
+type AddBragForm struct {
+	inputs           Form
+	tasksPager       viewport.Model
+	taskLookbackDays int
+	focusOnPager     bool
+}
+
 type model struct {
 	handler        *storage.Handler
 	tasks          map[string]storage.Task
@@ -59,6 +68,7 @@ type model struct {
 
 	createTaskForm    CreateTaskForm
 	createProjectForm CreateProjectForm
+	addBragForm       AddBragForm
 }
 
 func priorityOrdering(t_a storage.Task, t_b storage.Task) int {
@@ -136,12 +146,24 @@ func newCommandsListModel() list.Model {
 		item{title: "Clear", desc: "Delete all done tasks."},
 		item{title: "Create Project", desc: "Create a new project & switch to it."},
 		item{title: "Switch to Project", desc: "Switch to a different project."},
-		item{title: "Show Daily Work %", desc: "Show the Daily Work Percentage"},
+		item{title: "Show Daily Work %", desc: "Show the Daily Work Percentage."},
+		item{title: "Brag", desc: "Add an item to your brag document."},
 	}
 
 	commands := list.New(commandItems, list.NewDefaultDelegate(), 0, 0)
 	commands.Title = "Available Commands"
 	return commands
+}
+
+func newAddBragForm() AddBragForm {
+	text_inputs := []textinput.Model{}
+	text_areas := make([]textarea.Model, 1)
+	t := textarea.New()
+	t.Placeholder = "Brag"
+	text_areas[0] = t
+
+	abf := AddBragForm{inputs: Form{ti: text_inputs, ta: text_areas}, tasksPager: viewport.New(10, 10), taskLookbackDays: 7}
+	return abf
 }
 
 func newCreateTaskForm() CreateTaskForm {
@@ -156,7 +178,6 @@ func newCreateTaskForm() CreateTaskForm {
 		case 2:
 			t.Placeholder = "Priority"
 		}
-
 		text_inputs[i] = t
 	}
 
@@ -206,6 +227,7 @@ func NewModel() model {
 		formattedTasks:    formatTasks(structuredTasks),
 		createTaskForm:    newCreateTaskForm(),
 		createProjectForm: newCreateProjectForm(),
+		addBragForm:       newAddBragForm(),
 		mode:              NormalMode,
 		showHelp:          false,
 		commands:          commands,

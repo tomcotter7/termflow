@@ -107,6 +107,23 @@ func (h *Handler) SavePlanFile(file string, content string) error {
 	return os.WriteFile(path, []byte(content), 0o644)
 }
 
+func (h Handler) ReadPlanFile(file string) ([]byte, error) {
+	path := filepath.Join(h.dataFolder, planDir, file)
+	return os.ReadFile(path)
+}
+
+func (h *Handler) SaveBragFile(content string) error {
+	path := filepath.Join(h.dataFolder, "brag.md")
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString("===\n" + content + "\n")
+	return err
+}
+
 func (h *Handler) ListAllProjects() ([]string, error) {
 	files, err := os.ReadDir(h.dataFolder)
 	if err != nil {

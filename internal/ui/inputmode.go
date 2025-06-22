@@ -3,7 +3,6 @@ package ui
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -22,26 +21,7 @@ func randomId() string {
 }
 
 func (m model) inputModeView() string {
-	var b strings.Builder
-
-	m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
-	for i := range m.createTaskForm.inputs.ti {
-		b.WriteString(m.createTaskForm.inputs.ti[i].View())
-		b.WriteRune('\n')
-	}
-	b.WriteRune('\n')
-	for i := range m.createTaskForm.inputs.ta {
-		b.WriteString(m.createTaskForm.inputs.ta[i].View())
-		if i < len(m.createTaskForm.inputs.ta)-1 {
-			b.WriteRune('\n')
-		}
-	}
-	button := &blurredButton
-	if m.createTaskForm.inputs.onSubmitButton() {
-		button = &focusedButton
-	}
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
-	content := b.String()
+	content := m.createTaskForm.inputs.buildFormView()
 
 	contentHeight := strings.Count(content, "\n") + 1
 	topPadding := (m.termHeight - contentHeight) / 8
@@ -97,8 +77,6 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			blocked := false
 			id := randomId()
 
-			fmt.Println(m.createTaskForm.inputTaskId)
-
 			if len(m.createTaskForm.inputTaskId) > 0 {
 				created = m.tasks[m.createTaskForm.inputTaskId].Created
 				blocked = m.tasks[m.createTaskForm.inputTaskId].Blocked
@@ -125,15 +103,14 @@ func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		switch msg.String() {
+		switch k := msg.String(); k {
 		case "esc":
 			m.mode = NormalMode
 			m.createTaskForm.inputs.reset()
 			m.createTaskForm.inputTaskId = ""
 			return m, nil
 		case "tab", "shift+tab":
-			s := msg.String()
-			if s == "shift+tab" {
+			if k == "shift+tab" {
 				m.createTaskForm.inputs.decreaseFocusedIndex()
 			} else {
 				m.createTaskForm.inputs.increaseFocusedIndex()

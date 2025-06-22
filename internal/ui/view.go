@@ -63,6 +63,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleSwitchProjectModeUpdates(msg)
 	case ShowWorkPercentageMode:
 		return m.handleWPModeUpdate(msg)
+	case AddBragMode:
+		return m.handleAddBragModeUpdate(msg)
 	}
 
 	switch msg := msg.(type) {
@@ -96,6 +98,8 @@ func (m model) View() string {
 		return m.switchProjectModeView()
 	case ShowWorkPercentageMode:
 		return m.showWPModeView()
+	case AddBragMode:
+		return m.addBragModeView()
 	}
 
 	return "Something has gone wrong!\n\nReport at bug at https://github.com/tomcotter7/termflow/issues\n\n Press (q) to go back."
