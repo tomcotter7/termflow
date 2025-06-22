@@ -1,15 +1,44 @@
 package ui
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Form struct {
 	ti         []textinput.Model
 	ta         []textarea.Model
 	focusedIdx int
+}
+
+func (f Form) buildFormView() string {
+	var b strings.Builder
+
+	for i := range f.ti {
+		b.WriteString(f.ti[i].View())
+		b.WriteRune('\n')
+	}
+	b.WriteRune('\n')
+	for i := range f.ta {
+		b.WriteString(f.ta[i].View())
+		if i < len(f.ta)-1 {
+			b.WriteRune('\n')
+		}
+	}
+
+	button := &blurredButton
+	if f.onSubmitButton() {
+		button = &focusedButton
+	}
+
+	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
+	content := b.String()
+	return lipgloss.NewStyle().Align(lipgloss.Center).Render(content)
 }
 
 func (f *Form) onSubmitButton() bool {

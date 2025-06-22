@@ -60,6 +60,11 @@ func (m *model) executeCommand(command string) {
 		m.mode = SwitchProjectMode
 	case "show daily work %":
 		m.mode = ShowWorkPercentageMode
+	case "brag":
+		m.addBragForm.tasksPager.SetContent(m.getRecentlyCompletedTasks(m.addBragForm.taskLookbackDays))
+		m.addBragForm.focusOnPager = true
+		m.addBragForm.inputs.focusInput(0)
+		m.mode = AddBragMode
 	}
 }
 
