@@ -94,7 +94,7 @@ func (m model) handleAddBragModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.addBragForm.focusOnPager = false
 		case "enter":
 			if !m.addBragForm.focusOnPager && m.addBragForm.inputs.onSubmitButton() {
-				brag := m.addBragForm.inputs.ta[0].Value()
+				brag := fmt.Sprintf("## %s\n\n%s", m.addBragForm.inputs.ti[0].Value(), m.addBragForm.inputs.ta[0].Value())
 				m.handler.SaveBragFile(brag)
 				m.mode = NormalMode
 				m.addBragForm.inputs.reset()

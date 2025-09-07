@@ -154,13 +154,20 @@ func newCommandsListModel() list.Model {
 }
 
 func newAddBragForm() AddBragForm {
-	text_inputs := []textinput.Model{}
+	text_inputs := make([]textinput.Model, 1)
+	ti := textinput.New()
+	ti.Placeholder = "Brag Title"
+	text_inputs[0] = ti
 	text_areas := make([]textarea.Model, 1)
-	t := textarea.New()
-	t.Placeholder = "Brag"
-	text_areas[0] = t
+	ta := textarea.New()
+	ta.Placeholder = "Brag Content"
+	text_areas[0] = ta
 
-	abf := AddBragForm{inputs: Form{ti: text_inputs, ta: text_areas}, tasksPager: viewport.New(10, 10), taskLookbackDays: 7}
+	abf := AddBragForm{
+		inputs:           Form{ti: text_inputs, ta: text_areas},
+		tasksPager:       viewport.New(10, 10),
+		taskLookbackDays: 7,
+	}
 	return abf
 }
 

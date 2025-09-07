@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 const (
@@ -121,9 +120,7 @@ func (h *Handler) SaveBragFile(content string) error {
 	}
 	defer f.Close()
 
-	today := time.Now().Format("2006-01-02")
-
-	_, err = f.WriteString("=== " + today + "\n" + content + "\n")
+	_, err = f.WriteString("\n\n" + content + "\n")
 	return err
 }
 
