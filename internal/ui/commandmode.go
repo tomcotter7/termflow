@@ -58,8 +58,6 @@ func (m *model) executeCommand(command string) {
 	case "switch to project":
 		m.projects.SetSize(m.termWidth-2, m.termHeight-2)
 		m.mode = SwitchProjectMode
-	case "show daily work %":
-		m.mode = ShowWorkPercentageMode
 	case "brag":
 		m.addBragForm.tasksPager.SetContent(m.getRecentlyCompletedTasks(m.addBragForm.taskLookbackDays))
 		m.addBragForm.focusOnPager = true

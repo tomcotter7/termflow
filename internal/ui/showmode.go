@@ -2,16 +2,13 @@ package ui
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-const labelWidth = 25
-
-var showModeFocusedStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205")).Align(lipgloss.Left).Width(labelWidth)
+var showModetitleStyle = focusedStyle.Copy().Bold(true).PaddingBottom(1)
 
 func trimToLength(s string, maxLength int) string {
 	if len(s) > maxLength {
@@ -21,34 +18,46 @@ func trimToLength(s string, maxLength int) string {
 	return s
 }
 
+func createRenderedAttribute(attributeTitle string, attributeDescription string, titleStyle lipgloss.Style, boxWidth int) string {
+	titleStyle = showModetitleStyle.Copy().Width(boxWidth - 2).Align(lipgloss.Center)
+	attributeTitle = titleStyle.Render(attributeTitle)
+	attributeDescription = trimToLength(attributeDescription, boxWidth-2)
+
+	contentStr := fmt.Sprintf("%s\n%s", attributeTitle, attributeDescription)
+
+	boxStyle := borderStyle.Copy().Width(boxWidth).Align(lipgloss.Center)
+	return boxStyle.Render(contentStr)
+}
+
 func (m model) showModeView() string {
 	if m.cursor.row < len(m.formattedTasks[m.cursor.col]) {
 		item := m.formattedTasks[m.cursor.col][m.cursor.row]
 		if task, exists := m.tasks[item.ID]; exists {
 
+			boxWidth := int(float64(m.termWidth) * 0.8)
+			style := showModetitleStyle.Copy().Width(boxWidth - 2).Align(lipgloss.Center)
+
+			title := createRenderedAttribute("Title", task.Desc, style, boxWidth)
+			description := createRenderedAttribute("Description", task.FullDesc, style, boxWidth)
+			dates := createRenderedAttribute("Created | Due", task.Created+" | "+task.Due, style, boxWidth)
+			other := createRenderedAttribute("Other Attributes", fmt.Sprintf("%s: %t\n%s: %d\n%s: %t", boldStyle.Render("Blocked"), task.Blocked, boldStyle.Render("Priority"), task.Priority, boldStyle.Render("Ignore from .plan"), task.IgnoreFromPlan), style, boxWidth)
+
 			var s strings.Builder
 
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Title:"), trimToLength(task.Desc, m.termWidth-labelWidth)))
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Description:"), trimToLength(task.FullDesc, m.termWidth-labelWidth)))
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Created:"), trimToLength(task.Created, m.termWidth-labelWidth)))
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Due:"), trimToLength(task.Due, m.termWidth-labelWidth)))
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Blocked:"), trimToLength(strconv.FormatBool(task.Blocked), m.termWidth-labelWidth)))
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Priority"), trimToLength(strconv.Itoa(task.Priority), m.termWidth-labelWidth)))
-			s.WriteString(fmt.Sprintf("%s %s\n", showModeFocusedStyle.Render("Ignore from .plan:"), trimToLength(strconv.FormatBool(task.IgnoreFromPlan), m.termWidth-labelWidth)))
-
-			contentWidth := max(len(task.Desc), len(task.FullDesc), len(task.Created), len(task.Due))
+			s.WriteString(title + "\n")
+			s.WriteString(description + "\n")
+			s.WriteString(dates + "\n")
+			s.WriteString(other)
 
 			content := s.String()
 			contentHeight := strings.Count(content, "\n") + 1
 			topPadding := (m.termHeight - contentHeight) / 8
-			leftPadding := (m.termWidth - contentWidth) / 2
-			style := lipgloss.NewStyle().
+			rootStyle := lipgloss.NewStyle().
 				Width(m.termWidth).
-				Align(lipgloss.Left).
-				PaddingTop(topPadding).
-				PaddingLeft(leftPadding)
+				Align(lipgloss.Center).
+				PaddingTop(topPadding)
 
-			return style.Render(content)
+			return rootStyle.Render(content)
 
 		}
 	}

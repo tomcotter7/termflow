@@ -22,7 +22,6 @@ const (
 	CommandMode
 	NewProjectMode
 	SwitchProjectMode
-	ShowWorkPercentageMode
 	AddBragMode
 	ErrorMode
 )
@@ -146,7 +145,6 @@ func newCommandsListModel() list.Model {
 		item{title: "Clear", desc: "Delete all done tasks."},
 		item{title: "Create Project", desc: "Create a new project & switch to it."},
 		item{title: "Switch to Project", desc: "Switch to a different project."},
-		item{title: "Show Daily Work %", desc: "Show the Daily Work Percentage."},
 		item{title: "Brag", desc: "Add an item to your brag document."},
 	}
 

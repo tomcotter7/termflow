@@ -10,6 +10,7 @@ var (
 	blurredStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	noStyle      = lipgloss.NewStyle()
 	helpStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("244")).Align(lipgloss.Center)
+	boldStyle    = lipgloss.NewStyle().Bold(true)
 
 	doneStyle         = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Align(lipgloss.Center)
 	excludedDoneStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).Align(lipgloss.Center).Strikethrough(true)
@@ -27,6 +28,8 @@ var (
 
 	focusedButton = focusedStyle.Render("[ Submit ]")
 	blurredButton = blurredStyle.Render("[ Submit ]")
+
+	borderStyle = lipgloss.NewStyle().BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("15"))
 )
 
 var columnNames = map[int]string{
@@ -61,8 +64,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleNewProjectModeUpdate(msg)
 	case SwitchProjectMode:
 		return m.handleSwitchProjectModeUpdates(msg)
-	case ShowWorkPercentageMode:
-		return m.handleWPModeUpdate(msg)
 	case AddBragMode:
 		return m.handleAddBragModeUpdate(msg)
 	}
@@ -96,8 +97,6 @@ func (m model) View() string {
 		return m.newProjectModeView()
 	case SwitchProjectMode:
 		return m.switchProjectModeView()
-	case ShowWorkPercentageMode:
-		return m.showWPModeView()
 	case AddBragMode:
 		return m.addBragModeView()
 	}
