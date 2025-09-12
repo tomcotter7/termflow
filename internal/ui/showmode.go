@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var showModetitleStyle = focusedStyle.Copy().Bold(true).PaddingBottom(1)
+var showModetitleStyle = focusedStyle.Copy().Bold(true)
 
 func trimToLength(s string, maxLength int) string {
 	if len(s) > maxLength {
@@ -18,10 +18,9 @@ func trimToLength(s string, maxLength int) string {
 	return s
 }
 
-func createRenderedAttribute(attributeTitle string, attributeDescription string, titleStyle lipgloss.Style, boxWidth int) string {
-	titleStyle = showModetitleStyle.Copy().Width(boxWidth - 2).Align(lipgloss.Center)
+func createRenderedAttribute(attributeTitle string, attributeDescription string, titleStyle lipgloss.Style, boxWidth int, boxHeight int) string {
+	titleStyle = showModetitleStyle.Copy().Width(boxWidth - 2).Height(boxHeight - 2).Align(lipgloss.Center)
 	attributeTitle = titleStyle.Render(attributeTitle)
-	attributeDescription = trimToLength(attributeDescription, boxWidth-2)
 
 	contentStr := fmt.Sprintf("%s\n%s", attributeTitle, attributeDescription)
 
@@ -35,12 +34,13 @@ func (m model) showModeView() string {
 		if task, exists := m.tasks[item.ID]; exists {
 
 			boxWidth := int(float64(m.termWidth) * 0.8)
+			boxHeight := int(float64(m.termHeight) * 0.15)
 			style := showModetitleStyle.Copy().Width(boxWidth - 2).Align(lipgloss.Center)
 
-			title := createRenderedAttribute("Title", task.Desc, style, boxWidth)
-			description := createRenderedAttribute("Description", task.FullDesc, style, boxWidth)
-			dates := createRenderedAttribute("Created | Due", task.Created+" | "+task.Due, style, boxWidth)
-			other := createRenderedAttribute("Other Attributes", fmt.Sprintf("%s: %t\n%s: %d\n%s: %t", boldStyle.Render("Blocked"), task.Blocked, boldStyle.Render("Priority"), task.Priority, boldStyle.Render("Ignore from .plan"), task.IgnoreFromPlan), style, boxWidth)
+			title := createRenderedAttribute("Title", task.Desc, style, boxWidth, boxHeight)
+			description := createRenderedAttribute("Description", task.FullDesc, style, boxWidth, boxHeight)
+			dates := createRenderedAttribute("Created | Due", task.Created+" | "+task.Due, style, boxWidth, boxHeight)
+			other := createRenderedAttribute("Other Attributes", fmt.Sprintf("%s: %t\n%s: %d\n%s: %t", boldStyle.Render("Blocked"), task.Blocked, boldStyle.Render("Priority"), task.Priority, boldStyle.Render("Ignore from .plan"), task.IgnoreFromPlan), style, boxWidth, boxHeight)
 
 			var s strings.Builder
 
