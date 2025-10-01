@@ -7,22 +7,22 @@ type Cursor struct {
 	col int
 }
 
-func (c *Cursor) AdjustRow(formattedTasks [3][]storage.Task) {
+func (c *Cursor) AdjustRow(formattedTasks [4][]storage.Task) {
 	newColHeight := max(len(formattedTasks[c.col])-1, 0)
 	if c.row > newColHeight {
 		c.row = newColHeight
 	}
 }
 
-func (c *Cursor) IncCol(formattedTasks [3][]storage.Task) {
-	if c.col < 2 {
+func (c *Cursor) IncCol(formattedTasks [4][]storage.Task) {
+	if c.col < 3 {
 
 		c.col++
 		c.AdjustRow(formattedTasks)
 	}
 }
 
-func (c *Cursor) DecCol(formattedTasks [3][]storage.Task) {
+func (c *Cursor) DecCol(formattedTasks [4][]storage.Task) {
 	if c.col > 0 {
 		c.col--
 		c.AdjustRow(formattedTasks)

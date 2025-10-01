@@ -11,12 +11,12 @@ import (
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
-func transpose(l [3][]storage.Task) [][3]storage.Task {
+func transpose(l [4][]storage.Task) [][4]storage.Task {
 	max_len := max(len(l[0]), len(l[1]), len(l[2]))
-	l_t := make([][3]storage.Task, max_len)
+	l_t := make([][4]storage.Task, max_len)
 	for i := range max_len {
-		l_t[i] = [3]storage.Task{}
-		for j := range 3 {
+		l_t[i] = [4]storage.Task{}
+		for j := range 4 {
 			if i < len(l[j]) {
 				l_t[i][j] = l[j][i]
 			}
@@ -83,7 +83,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 
-			if task, exists := m.tasks[item.ID]; exists && m.cursor.col < 2 {
+			if task, exists := m.tasks[item.ID]; exists && m.cursor.col < 3 {
 				task.Status = columnNames[m.cursor.col+1]
 				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
@@ -174,13 +174,14 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) normalModeView() string {
+	numColumns := len(columnNames)
 	ll := getLongestTaskLength(m.tasks)
-	tTitle, iTitle, dTitle := "todo", "inprogress", "done"
+	tTitle, iTitle, rTitle, dTitle := "todo", "inprogress", "in-review", "done"
 
-	maxTaskLength := (m.termWidth - 8) / 3
+	maxTaskLength := (m.termWidth - 8) / numColumns
 
-	minPadding := 2
-	space := max(ll, len(tTitle), len(iTitle), len(dTitle)) + minPadding + 2
+	minPadding := 0
+	space := max(ll, len(tTitle), len(iTitle), len(rTitle), len(dTitle)) + minPadding
 
 	if maxTaskLength > 0 {
 		space = min(space, maxTaskLength)
@@ -192,27 +193,34 @@ func (m model) normalModeView() string {
 	case 1:
 		iTitle = "* " + iTitle
 	case 2:
+		rTitle = "* " + rTitle
+	case 3:
 		dTitle = "* " + dTitle
 	}
 
-	tTitle, iTitle, dTitle = addPadding(tTitle, space, true), addPadding(iTitle, space, true), addPadding(dTitle, space, true)
+	tTitle, iTitle, rTitle, dTitle = addPadding(tTitle, space, true), addPadding(iTitle, space, true), addPadding(rTitle, space, true), addPadding(dTitle, space, true)
 
 	tTitle = redText.Render(tTitle)
 	iTitle = yellowText.Render(iTitle)
+	rTitle = blueText.Render(rTitle)
 	dTitle = greenText.Render(dTitle)
 
 	var s strings.Builder
 
-	s.WriteString("╔" + strings.Repeat("═", space) + "╦" + strings.Repeat("═", space) + "╦" + strings.Repeat("═", space) + "╗\n")
+	cells := make([]string, numColumns)
+	for i := range cells {
+		cells[i] = strings.Repeat("═", space)
+	}
 
-	s.WriteString(fmt.Sprintf("║%s║%s║%s║", tTitle, iTitle, dTitle) + "\n")
-
-	s.WriteString("╠" + strings.Repeat("═", space) + "╬" + strings.Repeat("═", space) + "╬" + strings.Repeat("═", space) + "╣\n")
+	s.WriteString("╔" + strings.Join(cells, "╦") + "╗\n")
+	s.WriteString(fmt.Sprintf("║%s║%s║%s║%s║", tTitle, iTitle, rTitle, dTitle) + "\n")
+	s.WriteString("╠" + strings.Join(cells, "╬") + "╣\n")
 
 	tt := transpose(m.formattedTasks)
+
 	for i := range tt {
-		tasks := make([]string, 3)
-		for j := range 3 {
+		tasks := make([]string, numColumns)
+		for j := range numColumns {
 			taskData := tt[i][j]
 
 			tasks[j] = taskData.Desc
@@ -225,7 +233,7 @@ func (m model) normalModeView() string {
 			}
 			tasks[j] = addPadding(tasks[j], space, false)
 
-			if j < 2 {
+			if j < numColumns-1 {
 				if taskData.Due == time.Now().Format("2006-01-02") {
 					if !taskData.Blocked {
 						tasks[j] = blueText.Render(tasks[j])
@@ -252,22 +260,28 @@ func (m model) normalModeView() string {
 			}
 		}
 
-		tTask, iTask, dTask := tasks[0], tasks[1], tasks[2]
-		s.WriteString(fmt.Sprintf("║%s║%s║%s║\n", tTask, iTask, dTask))
+		// Build format string and arguments dynamically
+		formatStr := "║" + strings.Repeat("%s║", numColumns) + "\n"
+		args := make([]interface{}, numColumns)
+		for j := range numColumns {
+			args[j] = tasks[j]
+		}
+		s.WriteString(fmt.Sprintf(formatStr, args...))
 	}
 
-	s.WriteString("╠" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╩" + strings.Repeat("═", space) + "╣\n")
+	s.WriteString("╠" + strings.Join(cells, "╩") + "╣\n")
 
-	projectPadding := (space * 3) + 2 - len(m.activeProject) - 1
+	projectPadding := (space * numColumns) + 2 - len(m.activeProject)
 
 	s.WriteString("║" + " " + m.activeProject + strings.Repeat(" ", projectPadding) + "║\n")
 	if m.err != nil {
-		errorPadding := (space * 3) + 2 - len(m.err.Error()) - 1
+		errorPadding := (space * numColumns) + 2 - len(m.err.Error())
 		s.WriteString("║" + " " + redBackground.Render(m.err.Error()) + strings.Repeat(" ", errorPadding) + "║\n")
 	}
-	wpPadding := (space * 3) + 2 - len(m.wp) - 1
+	wpPadding := (space * numColumns) + 2 - len(m.wp)
 	s.WriteString("║" + " " + blueBackground.Render(m.wp) + strings.Repeat(" ", wpPadding) + "║\n")
-	s.WriteString("╚" + strings.Repeat("═", (space*3)+2) + "╝\n")
+
+	s.WriteString("╚" + strings.Repeat("═", (space*numColumns)+3) + "╝\n")
 
 	if m.showHelp {
 		s.WriteString(helpStyle.Render("\nCommands:\n"))

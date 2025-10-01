@@ -35,7 +35,8 @@ var (
 var columnNames = map[int]string{
 	0: "todo",
 	1: "inprogress",
-	2: "done",
+	2: "in-review",
+	3: "done",
 }
 
 type (

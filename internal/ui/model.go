@@ -53,7 +53,7 @@ type AddBragForm struct {
 type model struct {
 	handler        *storage.Handler
 	tasks          map[string]storage.Task
-	formattedTasks [3][]storage.Task
+	formattedTasks [4][]storage.Task
 	cursor         Cursor
 	mode           Mode
 	showHelp       bool
@@ -93,11 +93,12 @@ func priorityOrdering(t_a storage.Task, t_b storage.Task) int {
 	return 0
 }
 
-func formatTasks(tasks map[string]storage.Task) [3][]storage.Task {
-	fTasks := [3][]storage.Task{{}, {}, {}}
+func formatTasks(tasks map[string]storage.Task) [4][]storage.Task {
+	fTasks := [4][]storage.Task{{}, {}, {}, {}}
 
 	todoTasks := []storage.Task{}
 	ipTasks := []storage.Task{}
+	irTasks := []storage.Task{}
 	doneTasks := []storage.Task{}
 
 	for _, task := range tasks {
@@ -106,6 +107,8 @@ func formatTasks(tasks map[string]storage.Task) [3][]storage.Task {
 			todoTasks = append(todoTasks, task)
 		case "inprogress":
 			ipTasks = append(ipTasks, task)
+		case "in-review":
+			irTasks = append(irTasks, task)
 		case "done":
 			doneTasks = append(doneTasks, task)
 		}
@@ -113,11 +116,13 @@ func formatTasks(tasks map[string]storage.Task) [3][]storage.Task {
 
 	slices.SortFunc(todoTasks, priorityOrdering)
 	slices.SortFunc(ipTasks, priorityOrdering)
+	slices.SortFunc(irTasks, priorityOrdering)
 	slices.SortFunc(doneTasks, priorityOrdering)
 
 	fTasks[0] = todoTasks
 	fTasks[1] = ipTasks
-	fTasks[2] = doneTasks
+	fTasks[2] = irTasks
+	fTasks[3] = doneTasks
 
 	return fTasks
 }
