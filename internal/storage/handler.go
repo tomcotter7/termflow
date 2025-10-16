@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -113,7 +114,9 @@ func (h Handler) ReadPlanFile(file string) ([]byte, error) {
 }
 
 func (h *Handler) SaveBragFile(content string) error {
-	path := filepath.Join(h.dataFolder, "brag.md")
+	year := time.Now().Format("2006")
+	filename := "brag" + year + ".md"
+	path := filepath.Join(h.dataFolder, filename)
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
