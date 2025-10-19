@@ -20,7 +20,7 @@ func randomId() string {
 	return hex.EncodeToString(b)
 }
 
-func (m model) inputModeView() string {
+func (m model) editModeView() string {
 	content := m.createTaskForm.inputs.buildFormView()
 
 	contentHeight := strings.Count(content, "\n") + 1
@@ -34,7 +34,7 @@ func (m model) inputModeView() string {
 	return style.Render(content)
 }
 
-func (m model) handleInputModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 

@@ -28,6 +28,7 @@ func (f Form) buildFormView() string {
 		b.WriteString(f.ta[i].View())
 		if i < len(f.ta)-1 {
 			b.WriteRune('\n')
+			b.WriteRune('\n')
 		}
 	}
 

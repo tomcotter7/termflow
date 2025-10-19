@@ -55,8 +55,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.mode {
 	case NormalMode:
 		return m.handleNormalModelUpdate(msg)
-	case InputMode:
-		return m.handleInputModelUpdate(msg)
+	case EditMode:
+		return m.handleEditModelUpdate(msg)
 	case ShowMode:
 		return m.handleShowModeUpdate(msg)
 	case CommandMode:
@@ -88,8 +88,8 @@ func (m model) View() string {
 	switch m.mode {
 	case NormalMode:
 		return m.normalModeView()
-	case InputMode:
-		return m.inputModeView()
+	case EditMode:
+		return m.editModeView()
 	case ShowMode:
 		return m.showModeView()
 	case CommandMode:

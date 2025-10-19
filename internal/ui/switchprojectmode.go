@@ -18,6 +18,9 @@ func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) 
 			m.mode = NormalMode
 			return m, nil
 		case "enter":
+			if m.projects.SelectedItem().FilterValue() == m.activeProject {
+				return m, nil
+			}
 			m.activeProject = m.projects.SelectedItem().FilterValue()
 			m.handler.SaveCurrent(m.activeProject)
 			sts, err := m.handler.LoadTasks(m.activeProject + ".json")

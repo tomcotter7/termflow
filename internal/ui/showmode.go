@@ -19,7 +19,7 @@ func trimToLength(s string, maxLength int) string {
 }
 
 func createRenderedAttribute(attributeTitle string, attributeDescription string, titleStyle lipgloss.Style, boxWidth int, boxHeight int) string {
-	titleStyle = showModetitleStyle.Copy().Width(boxWidth - 2).Height(boxHeight - 2).Align(lipgloss.Center)
+	titleStyle = showModetitleStyle.Copy().Width(boxWidth - 2).Height(boxHeight - 6).Align(lipgloss.Center)
 	attributeTitle = titleStyle.Render(attributeTitle)
 
 	contentStr := fmt.Sprintf("%s\n%s", attributeTitle, attributeDescription)
@@ -42,12 +42,18 @@ func (m model) showModeView() string {
 			dates := createRenderedAttribute("Created | Due", task.Created+" | "+task.Due, style, boxWidth, boxHeight)
 			other := createRenderedAttribute("Other Attributes", fmt.Sprintf("%s: %t\n%s: %d\n%s: %t", boldStyle.Render("Blocked"), task.Blocked, boldStyle.Render("Priority"), task.Priority, boldStyle.Render("Ignore from .plan"), task.IgnoreFromPlan), style, boxWidth, boxHeight)
 
+			results := createRenderedAttribute("Results", "n/a", style, boxWidth, boxHeight)
+			if task.Status == "done" {
+				results = createRenderedAttribute("Results", task.Result, style, boxWidth, boxHeight)
+			}
+
 			var s strings.Builder
 
 			s.WriteString(title + "\n")
 			s.WriteString(description + "\n")
 			s.WriteString(dates + "\n")
-			s.WriteString(other)
+			s.WriteString(other + "\n")
+			s.WriteString(results)
 
 			content := s.String()
 			contentHeight := strings.Count(content, "\n") + 1

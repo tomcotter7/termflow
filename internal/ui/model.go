@@ -17,7 +17,7 @@ type Mode int
 
 const (
 	NormalMode Mode = iota
-	InputMode
+	EditMode
 	ShowMode
 	CommandMode
 	NewProjectMode
@@ -191,11 +191,16 @@ func newCreateTaskForm() CreateTaskForm {
 		text_inputs[i] = t
 	}
 
-	text_areas := make([]textarea.Model, 1)
+	text_areas := make([]textarea.Model, 2)
 	t := textarea.New()
 	t.Placeholder = "Full Description"
 	t.CharLimit = 0
 	text_areas[0] = t
+
+	t2 := textarea.New()
+	t2.Placeholder = "Results"
+	t2.CharLimit = 0
+	text_areas[1] = t2
 
 	cti := CreateTaskForm{inputs: Form{ti: text_inputs, ta: text_areas}}
 	return cti

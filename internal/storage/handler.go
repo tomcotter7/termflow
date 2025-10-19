@@ -26,6 +26,7 @@ type Task struct {
 	Blocked        bool   `json:"blocked"`
 	IgnoreFromPlan bool   `json:"ignorefromplan"`
 	Priority       int    `json:"priority"`
+	Result         string `json:"result"`
 }
 
 type Handler struct {
