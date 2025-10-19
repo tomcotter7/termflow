@@ -88,6 +88,16 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 				m.cursor.IncCol(m.formattedTasks)
+				if m.cursor.col == 3 { // in done;
+					m.mode = EditMode
+					m.createTaskForm.inputs.focusInput(4)
+					m.createTaskForm.inputTaskId = item.ID
+					m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
+					m.createTaskForm.inputs.ti[1].SetValue(task.Due)
+					m.createTaskForm.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
+					m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
+					m.createTaskForm.inputs.ta[1].SetValue(task.Result)
+				}
 			}
 
 		case "r":
