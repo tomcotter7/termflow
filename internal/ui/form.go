@@ -71,13 +71,14 @@ func (f *Form) deFocusInput(idx int) {
 }
 
 func (f *Form) focusInput(idx int) {
+	f.focusedIdx = idx
 	if idx < len(f.ti) {
 		f.ti[idx].Focus()
 		f.ti[idx].PromptStyle = focusedStyle
 		f.ti[idx].TextStyle = focusedStyle
 	} else if idx < len(f.ti)+len(f.ta) {
-		idx -= len(f.ti)
-		f.ta[idx].Focus()
+		adjustedIdx := idx - len(f.ti)
+		f.ta[adjustedIdx].Focus()
 	}
 }
 

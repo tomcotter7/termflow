@@ -92,6 +92,7 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Due:      dd,
 				Created:  created,
 				Blocked:  blocked,
+				Result:   m.createTaskForm.inputs.ta[1].Value(),
 			}
 			m.tasks[id] = newTask
 			m.handler.SaveTasks(m.activeProject+".json", m.tasks)

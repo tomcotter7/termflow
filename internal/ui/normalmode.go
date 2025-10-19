@@ -52,6 +52,17 @@ func getLongestTaskLength(tasks map[string]storage.Task) int {
 	return maxLength
 }
 
+func (m *model) switchToEditMode(task storage.Task, focusIdx int) {
+	m.mode = EditMode
+	m.createTaskForm.inputTaskId = task.ID
+	m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
+	m.createTaskForm.inputs.ti[1].SetValue(task.Due)
+	m.createTaskForm.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
+	m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
+	m.createTaskForm.inputs.ta[1].SetValue(task.Result)
+	m.createTaskForm.inputs.focusInput(focusIdx)
+}
+
 func (m *model) saveAndUpdateTasks() {
 	m.formattedTasks = formatTasks(m.tasks)
 	filename := m.activeProject + ".json"
@@ -83,20 +94,13 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 
-			if task, exists := m.tasks[item.ID]; exists && m.cursor.col < 3 {
+			if task, exists := m.tasks[item.ID]; exists && m.cursor.col < len(columnNames)-1 {
 				task.Status = columnNames[m.cursor.col+1]
 				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 				m.cursor.IncCol(m.formattedTasks)
-				if m.cursor.col == 3 { // in done;
-					m.mode = EditMode
-					m.createTaskForm.inputs.focusInput(4)
-					m.createTaskForm.inputTaskId = item.ID
-					m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
-					m.createTaskForm.inputs.ti[1].SetValue(task.Due)
-					m.createTaskForm.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
-					m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
-					m.createTaskForm.inputs.ta[1].SetValue(task.Result)
+				if m.cursor.col == len(columnNames)-1 {
+					m.switchToEditMode(task, 4)
 				}
 			}
 
@@ -126,14 +130,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "e":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item.ID]; exists {
-				m.mode = EditMode
-				m.createTaskForm.inputs.focusInput(0)
-				m.createTaskForm.inputTaskId = item.ID
-				m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
-				m.createTaskForm.inputs.ti[1].SetValue(task.Due)
-				m.createTaskForm.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
-				m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
-				m.createTaskForm.inputs.ta[1].SetValue(task.Result)
+				m.switchToEditMode(task, 0)
 			}
 		case "s", "enter":
 			m.mode = ShowMode
