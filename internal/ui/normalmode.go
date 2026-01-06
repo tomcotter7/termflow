@@ -184,7 +184,11 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) normalModeView() string {
 	numColumns := len(columnNames)
 	ll := getLongestTaskLength(m.tasks)
-	tTitle, iTitle, rTitle, dTitle := "todo", "inprogress", "in-review", "done"
+
+	tTitle := fmt.Sprintf("todo (%d)", len(m.formattedTasks[0]))
+	iTitle := fmt.Sprintf("inprogress (%d)", len(m.formattedTasks[1]))
+	rTitle := fmt.Sprintf("in-review (%d)", len(m.formattedTasks[2]))
+	dTitle := fmt.Sprintf("done (%d)", len(m.formattedTasks[3]))
 
 	maxTaskLength := (m.termWidth - 8) / numColumns
 
@@ -231,7 +235,13 @@ func (m model) normalModeView() string {
 		for j := range numColumns {
 			taskData := tt[i][j]
 
-			tasks[j] = taskData.Desc
+			if len(taskData.Desc) > 0 {
+				priorityIndicator := strings.Repeat("!", max((3-(taskData.Priority-1)), 0))
+				tasks[j] = priorityIndicator + " " + taskData.Desc
+			} else {
+				tasks[j] = taskData.Desc
+			}
+
 			if m.cursor.row == i && m.cursor.col == j {
 				if len(tasks[j]) > 0 {
 					tasks[j] = "> " + tasks[j]

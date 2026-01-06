@@ -72,9 +72,9 @@ type model struct {
 
 func priorityOrdering(t_a storage.Task, t_b storage.Task) int {
 	today := time.Now().Format("2006-01-02")
-	if (t_a.Due == today) && (t_b.Due != today) {
+	if (t_a.Due <= today) && (t_b.Due != today) {
 		return -1
-	} else if (t_a.Due != today) && (t_b.Due == today) {
+	} else if (t_a.Due != today) && (t_b.Due <= today) {
 		return 1
 	}
 
