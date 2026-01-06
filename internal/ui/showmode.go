@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tomcotter7/termflow/internal/storage"
 )
 
 var showModetitleStyle = focusedStyle.Copy().Bold(true)
@@ -43,7 +44,7 @@ func (m model) showModeView() string {
 			other := createRenderedAttribute("Other Attributes", fmt.Sprintf("%s: %t\n%s: %d\n%s: %t", boldStyle.Render("Blocked"), task.Blocked, boldStyle.Render("Priority"), task.Priority, boldStyle.Render("Ignore from .plan"), task.IgnoreFromPlan), style, boxWidth, boxHeight)
 
 			results := createRenderedAttribute("Results", "n/a", style, boxWidth, boxHeight)
-			if task.Status == "done" {
+			if task.Status == storage.StatusDone {
 				results = createRenderedAttribute("Results", task.Result, style, boxWidth, boxHeight)
 			}
 

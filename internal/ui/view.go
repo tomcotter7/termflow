@@ -3,6 +3,7 @@ package ui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tomcotter7/termflow/internal/storage"
 )
 
 var (
@@ -32,11 +33,11 @@ var (
 	borderStyle = lipgloss.NewStyle().BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("15"))
 )
 
-var columnNames = map[int]string{
-	0: "todo",
-	1: "inprogress",
-	2: "in-review",
-	3: "done",
+var columnNames = map[int]storage.Status{
+	0: storage.StatusTodo,
+	1: storage.StatusInProgress,
+	2: storage.StatusInReview,
+	3: storage.StatusDone,
 }
 
 type (

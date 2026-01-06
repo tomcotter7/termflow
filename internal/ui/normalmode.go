@@ -185,10 +185,10 @@ func (m model) normalModeView() string {
 	numColumns := len(columnNames)
 	ll := getLongestTaskLength(m.tasks)
 
-	tTitle := fmt.Sprintf("todo (%d)", len(m.formattedTasks[0]))
-	iTitle := fmt.Sprintf("inprogress (%d)", len(m.formattedTasks[1]))
-	rTitle := fmt.Sprintf("in-review (%d)", len(m.formattedTasks[2]))
-	dTitle := fmt.Sprintf("done (%d)", len(m.formattedTasks[3]))
+	tTitle := fmt.Sprintf("%s (%d)", storage.StatusTodo, len(m.formattedTasks[0]))
+	iTitle := fmt.Sprintf("%s (%d)", storage.StatusInProgress, len(m.formattedTasks[1]))
+	rTitle := fmt.Sprintf("%s (%d)", storage.StatusInReview, len(m.formattedTasks[2]))
+	dTitle := fmt.Sprintf("%s (%d)", storage.StatusDone, len(m.formattedTasks[3]))
 
 	maxTaskLength := (m.termWidth - 8) / numColumns
 
@@ -258,7 +258,7 @@ func (m model) normalModeView() string {
 					} else {
 						tasks[j] = blueTextRedBackground.Render(tasks[j])
 					}
-				} else if taskData.Due != "done" && taskData.Due < time.Now().Format("2006-01-02") {
+				} else if taskData.Status != storage.StatusDone && taskData.Due < time.Now().Format("2006-01-02") {
 					if !taskData.Blocked {
 						tasks[j] = orangeText.Render(tasks[j])
 					} else {

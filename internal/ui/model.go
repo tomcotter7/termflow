@@ -103,13 +103,13 @@ func formatTasks(tasks map[string]storage.Task) [4][]storage.Task {
 
 	for _, task := range tasks {
 		switch task.Status {
-		case "todo":
+		case storage.StatusTodo:
 			todoTasks = append(todoTasks, task)
-		case "inprogress":
+		case storage.StatusInProgress:
 			ipTasks = append(ipTasks, task)
-		case "in-review":
+		case storage.StatusInReview:
 			irTasks = append(irTasks, task)
-		case "done":
+		case storage.StatusDone:
 			doneTasks = append(doneTasks, task)
 		}
 	}

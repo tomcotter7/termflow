@@ -16,9 +16,18 @@ const (
 	fileExt = ".json"
 )
 
+type Status string
+
+const (
+	StatusTodo       Status = "todo"
+	StatusInProgress Status = "inprogress"
+	StatusInReview   Status = "in-review"
+	StatusDone       Status = "done"
+)
+
 type Task struct {
 	ID             string `json:"id,omitempty"`
-	Status         string `json:"status"`
+	Status         Status `json:"status"`
 	Desc           string `json:"desc"`
 	FullDesc       string `json:"fulldesc"`
 	Created        string `json:"created"`

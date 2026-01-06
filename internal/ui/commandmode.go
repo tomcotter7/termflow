@@ -15,7 +15,7 @@ func (m model) writeToPlanFile(tasks map[string]storage.Task) error {
 	var s strings.Builder
 
 	for k, v := range tasks {
-		if v.Status == "done" && !v.IgnoreFromPlan {
+		if v.Status == storage.StatusDone && !v.IgnoreFromPlan {
 			s.WriteString("Task ID: " + k + "\n")
 			s.WriteString("Title: " + v.Desc + "\n")
 			if len(v.FullDesc) > 1 {
@@ -38,7 +38,7 @@ func (m *model) executeCommand(command string) {
 	case "clear":
 		newTasks := make(map[string]storage.Task)
 		for k, v := range m.tasks {
-			if v.Status != "done" {
+			if v.Status != storage.StatusDone {
 				newTasks[k] = v
 			}
 		}
