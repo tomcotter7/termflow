@@ -86,6 +86,10 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cursor.IncRow(len(m.formattedTasks[m.cursor.col]) - 1)
 		case "k", "up":
 			m.cursor.DecRow()
+		case "0":
+			m.cursor.MoveToFirstCol(m.formattedTasks)
+		case "$":
+			m.cursor.MoveToLastCol(m.formattedTasks)
 		case "p":
 
 			if len(m.formattedTasks[m.cursor.col]) <= m.cursor.row {

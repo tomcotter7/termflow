@@ -7,6 +7,20 @@ type Cursor struct {
 	col int
 }
 
+func (c *Cursor) MoveToFirstCol(formattedTasks [4][]storage.Task) {
+	if c.col != 0 {
+		c.col = 0
+		c.AdjustRow(formattedTasks)
+	}
+}
+
+func (c *Cursor) MoveToLastCol(formattedTasks [4][]storage.Task) {
+	if c.col < 3 {
+		c.col = 3
+		c.AdjustRow(formattedTasks)
+	}
+}
+
 func (c *Cursor) AdjustRow(formattedTasks [4][]storage.Task) {
 	newColHeight := max(len(formattedTasks[c.col])-1, 0)
 	if c.row > newColHeight {
