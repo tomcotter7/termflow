@@ -15,7 +15,9 @@ import (
 
 func randomId() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		panic("failed to generate random ID: " + err.Error())
+	}
 
 	return hex.EncodeToString(b)
 }
