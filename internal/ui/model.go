@@ -3,6 +3,7 @@ package ui
 import (
 	"log"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -43,6 +44,15 @@ type CreateTaskForm struct {
 	inputTaskId string
 }
 
+func (f *CreateTaskForm) PopulateFromTask(task storage.Task) {
+	f.inputTaskId = task.ID
+	f.inputs.ti[0].SetValue(task.Desc)
+	f.inputs.ti[1].SetValue(task.Due)
+	f.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
+	f.inputs.ta[0].SetValue(task.FullDesc)
+	f.inputs.ta[1].SetValue(task.Result)
+}
+
 type AddBragForm struct {
 	inputs           Form
 	tasksPager       viewport.Model
@@ -64,6 +74,7 @@ type model struct {
 	activeProject  string
 	err            error
 	wp             string
+	lastKey        string // Track last key for multi-key sequences like "gg"
 
 	createTaskForm    CreateTaskForm
 	createProjectForm CreateProjectForm

@@ -7,6 +7,14 @@ type Cursor struct {
 	col int
 }
 
+func (c *Cursor) MoveToFirstRow() {
+	c.row = 0
+}
+
+func (c *Cursor) MoveToLastRow(maxLen int) {
+	c.row = maxLen
+}
+
 func (c *Cursor) MoveToFirstCol(formattedTasks [4][]storage.Task) {
 	if c.col != 0 {
 		c.col = 0

@@ -24,7 +24,7 @@
    rand.Read(b) // error ignored!
    ```
 
-3. **Unify Form Types** - `Form` and `TextInputs` structs have duplicated logic for focus management. Consider a single abstraction.
+3. [X] **Unify Form Types** - `Form` and `TextInputs` structs have duplicated logic for focus management. Consider a single abstraction.
 
 4. **Split Large Functions** - `normalModeView()` is ~150 lines. Extract helpers like `renderTaskCell()`, `renderHeaders()`, `renderFooter()`.
 
@@ -32,16 +32,15 @@
 
 6. **Use Interfaces for Storage** - `Handler` could implement an interface for easier testing/mocking.
 
-7. **Consistent Error Handling** - Some places set `m.err` and switch to `ErrorMode`, others use `log.Fatal`. Standardize the approach.
+7. [X] **Consistent Error Handling** - Some places set `m.err` and switch to `ErrorMode`, others use `log.Fatal`. Standardize the approach.
 
 ## ✨ Feature Improvements
 
 1. **Search/Filter** - Press `/` to filter tasks by keyword across all columns
 2. **Quick Priority Adjust** - `+`/`-` keys to bump priority up/down without entering edit mode
 3. **Undo** - Track last action and allow `u` to undo delete/promote/regress
-4. **Task Duplication** - `y` to yank/duplicate a task
 5. **Vim Navigation** - 
-    - `gg`/`G` for top/bottom
+    - [X] `gg`/`G` for top/bottom
     - [X] `0`/`$` for first/last column
 6. **Tags/Labels** - Support `#tag` syntax in descriptions for categorization
 7. **Archive** - Instead of delete, archive completed tasks for historical reference

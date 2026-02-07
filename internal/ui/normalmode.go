@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -11,8 +10,11 @@ import (
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
-func transpose(l [4][]storage.Task) [][4]storage.Task {
-	max_len := max(len(l[0]), len(l[1]), len(l[2]))
+func transposeTasks(l [4][]storage.Task) [][4]storage.Task {
+	max_len := 0
+	for _, col := range l {
+		max_len = max(max_len, len(col))
+	}
 	l_t := make([][4]storage.Task, max_len)
 	for i := range max_len {
 		l_t[i] = [4]storage.Task{}
@@ -54,12 +56,7 @@ func getLongestTaskLength(tasks map[string]storage.Task) int {
 
 func (m *model) switchToEditMode(task storage.Task, focusIdx int) {
 	m.mode = EditMode
-	m.createTaskForm.inputTaskId = task.ID
-	m.createTaskForm.inputs.ti[0].SetValue(task.Desc)
-	m.createTaskForm.inputs.ti[1].SetValue(task.Due)
-	m.createTaskForm.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
-	m.createTaskForm.inputs.ta[0].SetValue(task.FullDesc)
-	m.createTaskForm.inputs.ta[1].SetValue(task.Result)
+	m.createTaskForm.PopulateFromTask(task)
 	m.createTaskForm.inputs.focusInput(focusIdx)
 }
 
@@ -90,6 +87,16 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cursor.MoveToFirstCol(m.formattedTasks)
 		case "$":
 			m.cursor.MoveToLastCol(m.formattedTasks)
+		case "G":
+			m.cursor.MoveToLastRow(len(m.formattedTasks[m.cursor.col]) - 1)
+		case "g":
+			if m.lastKey == "g" {
+				m.cursor.MoveToFirstRow()
+				m.lastKey = ""
+			} else {
+				m.lastKey = "g"
+			}
+			return m, nil
 		case "p":
 
 			if len(m.formattedTasks[m.cursor.col]) <= m.cursor.row {
@@ -225,7 +232,7 @@ func (m model) renderTaskString(task storage.Task, i int, j int, space int, numC
 }
 
 func (m model) renderTasks(s *strings.Builder, space int, numColumns int) {
-	tt := transpose(m.formattedTasks)
+	tt := transposeTasks(m.formattedTasks)
 	for i := range tt {
 		tasks := make([]string, numColumns)
 		for j := range numColumns {

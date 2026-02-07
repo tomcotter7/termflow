@@ -11,14 +11,6 @@ import (
 
 var showModetitleStyle = focusedStyle.Copy().Bold(true)
 
-func trimToLength(s string, maxLength int) string {
-	if len(s) > maxLength {
-		s = s[:maxLength-3] + "..."
-	}
-
-	return s
-}
-
 func createRenderedAttribute(attributeTitle string, attributeDescription string, titleStyle lipgloss.Style, boxWidth int, boxHeight int) string {
 	titleStyle = showModetitleStyle.Copy().Width(boxWidth - 2).Height(boxHeight - 6).Align(lipgloss.Center)
 	attributeTitle = titleStyle.Render(attributeTitle)
