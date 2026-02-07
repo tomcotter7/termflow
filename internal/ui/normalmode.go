@@ -185,6 +185,63 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) renderTaskString(task storage.Task, i int, j int, space int, numColumns int) string {
+	// TODO; Add priority indication here
+	taskString := task.Desc
+
+	if m.cursor.row == i && m.cursor.col == j {
+		if len(taskString) > 0 {
+			taskString = "> " + taskString
+		} else {
+			taskString = "--+--"
+		}
+	}
+
+	taskString = addPadding(taskString, space, false)
+
+	if task.Status == storage.StatusDone {
+		if task.IgnoreFromPlan {
+			return excludedDoneStyle.Render(taskString)
+		} else {
+			return doneStyle.Render(taskString)
+		}
+	}
+
+	if task.Due == time.Now().Format("2006-01-02") {
+		if !task.Blocked {
+			return blueText.Render(taskString)
+		}
+		return blueTextRedBackground.Render(taskString)
+	} else if task.Due < time.Now().Format("2006-01-02") {
+		if !task.Blocked {
+			return orangeText.Render(taskString)
+		}
+		return orangeTextRedBackground.Render(taskString)
+	} else {
+		return redBackground.Render(taskString)
+	}
+
+	return taskString
+}
+
+func (m model) renderTasks(s *strings.Builder, space int, numColumns int) {
+	tt := transpose(m.formattedTasks)
+	for i := range tt {
+		tasks := make([]string, numColumns)
+		for j := range numColumns {
+			taskData := tt[i][j]
+			tasks[j] = m.renderTaskString(taskData, i, j, space, numColumns)
+		}
+
+		formatStr := "║" + strings.Repeat("%s║", numColumns) + "\n"
+		args := make([]interface{}, numColumns)
+		for j := range numColumns {
+			args[j] = tasks[j]
+		}
+		s.WriteString(fmt.Sprintf(formatStr, args...))
+	}
+}
+
 func (m model) normalModeView() string {
 	numColumns := len(columnNames)
 	ll := getLongestTaskLength(m.tasks)
@@ -232,64 +289,7 @@ func (m model) normalModeView() string {
 	s.WriteString(fmt.Sprintf("║%s║%s║%s║%s║", tTitle, iTitle, rTitle, dTitle) + "\n")
 	s.WriteString("╠" + strings.Join(cells, "╬") + "╣\n")
 
-	tt := transpose(m.formattedTasks)
-
-	for i := range tt {
-		tasks := make([]string, numColumns)
-		for j := range numColumns {
-			taskData := tt[i][j]
-
-			if len(taskData.Desc) > 0 {
-				priorityIndicator := strings.Repeat("!", max((3-(taskData.Priority-1)), 0))
-				tasks[j] = priorityIndicator + " " + taskData.Desc
-			} else {
-				tasks[j] = taskData.Desc
-			}
-
-			if m.cursor.row == i && m.cursor.col == j {
-				if len(tasks[j]) > 0 {
-					tasks[j] = "> " + tasks[j]
-				} else {
-					tasks[j] = "--+--"
-				}
-			}
-			tasks[j] = addPadding(tasks[j], space, false)
-
-			if j < numColumns-1 {
-				if taskData.Due == time.Now().Format("2006-01-02") {
-					if !taskData.Blocked {
-						tasks[j] = blueText.Render(tasks[j])
-					} else {
-						tasks[j] = blueTextRedBackground.Render(tasks[j])
-					}
-				} else if taskData.Status != storage.StatusDone && taskData.Due < time.Now().Format("2006-01-02") {
-					if !taskData.Blocked {
-						tasks[j] = orangeText.Render(tasks[j])
-					} else {
-						tasks[j] = orangeTextRedBackground.Render(tasks[j])
-					}
-				} else {
-					if taskData.Blocked {
-						tasks[j] = redBackground.Render(tasks[j])
-					}
-				}
-			} else {
-				if taskData.IgnoreFromPlan {
-					tasks[j] = excludedDoneStyle.Render(tasks[j])
-				} else {
-					tasks[j] = doneStyle.Render(tasks[j])
-				}
-			}
-		}
-
-		// Build format string and arguments dynamically
-		formatStr := "║" + strings.Repeat("%s║", numColumns) + "\n"
-		args := make([]interface{}, numColumns)
-		for j := range numColumns {
-			args[j] = tasks[j]
-		}
-		s.WriteString(fmt.Sprintf(formatStr, args...))
-	}
+	m.renderTasks(&s, space, numColumns)
 
 	s.WriteString("╠" + strings.Join(cells, "╩") + "╣\n")
 

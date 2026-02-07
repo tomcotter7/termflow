@@ -35,7 +35,7 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 type CreateProjectForm struct {
-	textInputs TextInputs
+	inputs Form
 }
 
 type CreateTaskForm struct {
@@ -212,8 +212,14 @@ func newCreateProjectForm() CreateProjectForm {
 	t.Placeholder = "Project Name"
 	project_inputs[0] = t
 
-	pti := CreateProjectForm{textInputs: TextInputs{ti: project_inputs}}
+	pti := CreateProjectForm{inputs: Form{ti: project_inputs}}
 	return pti
+}
+
+func (m model) setError(err error) model {
+	m.err = err
+	m.mode = ErrorMode
+	return m
 }
 
 func NewModel() model {

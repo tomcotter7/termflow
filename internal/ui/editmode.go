@@ -13,13 +13,13 @@ import (
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
-func randomId() string {
+func randomId() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		panic("failed to generate random ID: " + err.Error())
+		return "", err
 	}
 
-	return hex.EncodeToString(b)
+	return hex.EncodeToString(b), nil
 }
 
 func (m model) editModeView() string {
@@ -77,7 +77,12 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			created := time.Now().Format("2006-01-02")
 			blocked := false
-			id := randomId()
+			id, err := randomId()
+			if err != nil {
+				m.err = err
+				m.mode = ErrorMode
+				return m, nil
+			}
 
 			if len(m.createTaskForm.inputTaskId) > 0 {
 				created = m.tasks[m.createTaskForm.inputTaskId].Created

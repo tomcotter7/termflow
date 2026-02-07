@@ -48,12 +48,12 @@ func (m *model) executeCommand(command string) {
 	case "print":
 		err := m.writeToPlanFile(m.tasks)
 		if err != nil {
-			m.mode = ErrorMode
 			m.err = err
+			m.mode = ErrorMode
 		}
 		m.mode = NormalMode
 	case "create project":
-		m.createProjectForm.textInputs.focusTextInput(0)
+		m.createProjectForm.inputs.focusInput(0)
 		m.mode = NewProjectMode
 	case "switch to project":
 		m.projects.SetSize(m.termWidth-2, m.termHeight-2)
