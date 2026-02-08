@@ -193,8 +193,11 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) renderTaskString(task storage.Task, i int, j int, space int, numColumns int) string {
-	// TODO; Add priority indication here
 	taskString := task.Desc
+
+	if task.Priority == 1 {
+		taskString = "!! " + taskString
+	}
 
 	if m.cursor.row == i && m.cursor.col == j {
 		if len(taskString) > 0 {
@@ -214,6 +217,14 @@ func (m model) renderTaskString(task storage.Task, i int, j int, space int, numC
 		}
 	}
 
+	if task.Due == "none" {
+		if task.Blocked {
+			return redBackground.Render(taskString)
+		}
+		return taskString
+
+	}
+
 	if task.Due == time.Now().Format("2006-01-02") {
 		if !task.Blocked {
 			return blueText.Render(taskString)
@@ -227,8 +238,6 @@ func (m model) renderTaskString(task storage.Task, i int, j int, space int, numC
 	} else {
 		return redBackground.Render(taskString)
 	}
-
-	return taskString
 }
 
 func (m model) renderTasks(s *strings.Builder, space int, numColumns int) {
