@@ -49,25 +49,11 @@ func (m model) showModeView() string {
 			s.WriteString(results)
 
 			content := s.String()
-			contentHeight := strings.Count(content, "\n") + 1
-			topPadding := (m.termHeight - contentHeight) / 8
-			rootStyle := lipgloss.NewStyle().
-				Width(m.termWidth).
-				Align(lipgloss.Center).
-				PaddingTop(topPadding)
-
-			return rootStyle.Render(content)
-
+			return m.centeredView(content)
 		}
 	}
 	content := "Nothing to see here!"
-	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.termHeight - contentHeight) / 8
-	style := lipgloss.NewStyle().
-		Width(m.termWidth).
-		Align(lipgloss.Center).
-		PaddingTop(topPadding)
-	return style.Render(content)
+	return m.centeredView(content)
 }
 
 func (m model) handleShowModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {

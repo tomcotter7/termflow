@@ -9,7 +9,7 @@ import (
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var listContainerStyle = lipgloss.NewStyle().Margin(1, 2)
 
 func (m model) writeToPlanFile(tasks map[string]storage.Task) error {
 	var s strings.Builder
@@ -63,11 +63,19 @@ func (m *model) executeCommand(command string) {
 		m.addBragForm.focusOnPager = false
 		m.addBragForm.inputs.focusInput(0)
 		m.mode = AddBragMode
+	case "new note":
+		m.mode = AddNoteMode
+		m.addNoteForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+		m.addNoteForm.inputs.ta[0].SetHeight(m.termHeight / 2)
+		m.addNoteForm.inputs.focusInput(0)
+	case "view notes":
+		m.notesList.SetSize(m.termWidth-2, m.termHeight-2)
+		m.mode = NotesViewMode
 	}
 }
 
 func (m model) commandModeView() string {
-	return docStyle.Render(m.commands.View())
+	return listContainerStyle.Render(m.commands.View())
 }
 
 func (m model) handleCommandModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -76,7 +84,7 @@ func (m model) handleCommandModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "q":
+		case "q", "esc":
 			m.mode = NormalMode
 			return m, nil
 		case "enter":
@@ -85,7 +93,7 @@ func (m model) handleCommandModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
+		h, v := listContainerStyle.GetFrameSize()
 		m.commands.SetSize(msg.Width-h, msg.Height-v)
 	}
 

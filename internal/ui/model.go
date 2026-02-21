@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -24,10 +25,14 @@ const (
 	NewProjectMode
 	SwitchProjectMode
 	AddBragMode
+	AddNoteMode
+	NotesViewMode
+	ParseNoteMode
 	ErrorMode
 )
 
 type item struct {
+	id          string
 	title, desc string
 }
 
@@ -60,11 +65,17 @@ type AddBragForm struct {
 	focusOnPager     bool
 }
 
+type AddNoteForm struct {
+	inputs Form
+}
+
 type model struct {
 	handler        *storage.Handler
 	tasks          map[string]storage.Task
 	formattedTasks [4][]storage.Task
 	cursor         Cursor
+	notes          map[string]storage.Note
+	notesList      list.Model
 	mode           Mode
 	showHelp       bool
 	commands       list.Model
@@ -74,11 +85,12 @@ type model struct {
 	activeProject  string
 	err            error
 	wp             string
-	lastKey        string // Track last key for multi-key sequences like "gg"
+	lastKey        string
 
 	createTaskForm    CreateTaskForm
 	createProjectForm CreateProjectForm
 	addBragForm       AddBragForm
+	addNoteForm       AddNoteForm
 }
 
 func priorityOrdering(t_a storage.Task, t_b storage.Task) int {
@@ -138,6 +150,23 @@ func formatTasks(tasks map[string]storage.Task) [4][]storage.Task {
 	return fTasks
 }
 
+func createNotesListModel(notes map[string]storage.Note) list.Model {
+	notesItems := make([]list.Item, len(notes))
+
+	idx := 0
+	for id, note := range notes {
+		notesItems[idx] = item{id: id, title: note.Created, desc: note.Content}
+		idx++
+	}
+
+	delegate := list.NewDefaultDelegate()
+	delegate.Styles.NormalTitle = delegate.Styles.NormalTitle.Foreground(lipgloss.Color("#555555"))
+
+	notesList := list.New(notesItems, delegate, 0, 0)
+	notesList.Title = "Notes"
+	return notesList
+}
+
 func newProjectListModel(h *storage.Handler) (list.Model, error) {
 	projectNames, err := h.ListAllProjects()
 	if err != nil {
@@ -148,8 +177,10 @@ func newProjectListModel(h *storage.Handler) (list.Model, error) {
 	for i, project := range projectNames {
 		projectItems[i] = item{title: project, desc: ""}
 	}
+	delegate := list.NewDefaultDelegate()
+	delegate.Styles.NormalTitle = delegate.Styles.NormalTitle.Foreground(lipgloss.Color("#555555"))
 
-	projects := list.New(projectItems, list.NewDefaultDelegate(), 0, 0)
+	projects := list.New(projectItems, delegate, 0, 0)
 	projects.Title = "Available Projects"
 
 	return projects, nil
@@ -157,6 +188,8 @@ func newProjectListModel(h *storage.Handler) (list.Model, error) {
 
 func newCommandsListModel() list.Model {
 	commandItems := []list.Item{
+		item{title: "New Note", desc: "Add a WIP note to be later parsed into todo item."},
+		item{title: "View Notes", desc: "View all current notes."},
 		item{title: "Print", desc: "Produce a Carmack-like .plan file with all done tasks."},
 		item{title: "Clear", desc: "Delete all done tasks."},
 		item{title: "Create Project", desc: "Create a new project & switch to it."},
@@ -164,7 +197,10 @@ func newCommandsListModel() list.Model {
 		item{title: "Brag", desc: "Add an item to your brag document."},
 	}
 
-	commands := list.New(commandItems, list.NewDefaultDelegate(), 0, 0)
+	delegate := list.NewDefaultDelegate()
+	delegate.Styles.NormalTitle = delegate.Styles.NormalTitle.Foreground(lipgloss.Color("#555555"))
+
+	commands := list.New(commandItems, delegate, 0, 0)
 	commands.Title = "Available Commands"
 	return commands
 }
@@ -185,6 +221,19 @@ func newAddBragForm() AddBragForm {
 		taskLookbackDays: 7,
 	}
 	return abf
+}
+
+func newAddNoteForm() AddNoteForm {
+	text_areas := make([]textarea.Model, 1)
+	ta := textarea.New()
+	ta.Placeholder = "Note Content..."
+	text_areas[0] = ta
+
+	anf := AddNoteForm{
+		inputs: Form{ta: text_areas},
+	}
+
+	return anf
 }
 
 func newCreateTaskForm() CreateTaskForm {
@@ -242,7 +291,12 @@ func NewModel() model {
 	currentProject := h.GetCurrent()
 	structuredTasks, err := h.LoadTasks(currentProject + ".json")
 	if err != nil {
-		log.Fatal("Unable to load initial model:", err)
+		log.Fatal("Unable to load initial tasks:", err)
+	}
+
+	notes, err := h.LoadNotes(currentProject + "_notes.json")
+	if err != nil {
+		log.Fatal("Unable to load initial notes:", err)
 	}
 
 	commands := newCommandsListModel()
@@ -257,9 +311,12 @@ func NewModel() model {
 		handler:           h,
 		tasks:             structuredTasks,
 		formattedTasks:    formatTasks(structuredTasks),
+		notes:             notes,
+		notesList:         createNotesListModel(notes),
 		createTaskForm:    newCreateTaskForm(),
 		createProjectForm: newCreateProjectForm(),
 		addBragForm:       newAddBragForm(),
+		addNoteForm:       newAddNoteForm(),
 		mode:              NormalMode,
 		showHelp:          false,
 		commands:          commands,

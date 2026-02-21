@@ -5,7 +5,7 @@ import (
 )
 
 func (m model) switchProjectModeView() string {
-	return docStyle.Render(m.projects.View())
+	return listContainerStyle.Render(m.projects.View())
 }
 
 func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -14,8 +14,8 @@ func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) 
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "q":
-			m.mode = NormalMode
+		case "q", "esc":
+			m.mode = CommandMode
 			return m, nil
 		case "enter":
 			if m.projects.SelectedItem().FilterValue() == m.activeProject {
@@ -37,7 +37,7 @@ func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) 
 			return m, nil
 		}
 	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
+		h, v := listContainerStyle.GetFrameSize()
 		m.projects.SetSize(msg.Width-h, msg.Height-v)
 	}
 

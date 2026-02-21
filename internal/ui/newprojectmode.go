@@ -1,37 +1,12 @@
 package ui
 
 import (
-	"fmt"
-	"strings"
-
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) newProjectModeView() string {
-	var b strings.Builder
-	for i := range m.createProjectForm.inputs.ti {
-		b.WriteString(m.createProjectForm.inputs.ti[i].View())
-		if i < len(m.createProjectForm.inputs.ti)-1 {
-			b.WriteRune('\n')
-		}
-	}
-	button := &blurredButton
-	if m.createProjectForm.inputs.onSubmitButton() {
-		button = &focusedButton
-	}
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
-	content := b.String()
-
-	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.termHeight - contentHeight) / 8
-
-	style := lipgloss.NewStyle().
-		Width(m.termWidth).
-		Align(lipgloss.Center).
-		PaddingTop(topPadding)
-
-	return style.Render(content)
+	content := m.createProjectForm.inputs.buildFormView()
+	return m.centeredView(content)
 }
 
 func (m model) handleNewProjectModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {

@@ -38,6 +38,12 @@ type Task struct {
 	Result         string `json:"result"`
 }
 
+type Note struct {
+	ID      string `json:"id,omitempty"`
+	Created string `json:"created"`
+	Content string `json:"content"`
+}
+
 type Handler struct {
 	dataFolder string
 }
@@ -63,18 +69,13 @@ func New() (*Handler, error) {
 	}, nil
 }
 
-func (h *Handler) LoadTasks(file string) (map[string]Task, error) {
-	path := h.GetTaskPath(file)
-	data := make(map[string]Task)
+func loadJSON[T any](h *Handler, file string) (map[string]T, error) {
+	path := h.GetPath(file)
+	data := make(map[string]T)
 
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			f, err = os.Create(path)
-			if err != nil {
-				return nil, err
-			}
-			defer f.Close()
 			return data, nil
 		} else {
 			return nil, err
@@ -82,8 +83,34 @@ func (h *Handler) LoadTasks(file string) (map[string]Task, error) {
 	}
 
 	defer f.Close()
-
 	if err := json.NewDecoder(f).Decode(&data); err != nil && !errors.Is(err, io.EOF) {
+		return nil, err
+	}
+	return data, nil
+}
+
+func saveJSON[T any](h *Handler, file string, data map[string]T) error {
+	path := h.GetPath(file)
+
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "    ")
+	if err := enc.Encode(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *Handler) LoadTasks(file string) (map[string]Task, error) {
+	data, err := loadJSON[Task](h, file)
+	if err != nil {
 		return nil, err
 	}
 
@@ -95,22 +122,26 @@ func (h *Handler) LoadTasks(file string) (map[string]Task, error) {
 	return finalData, nil
 }
 
-func (h *Handler) SaveTasks(file string, tasks map[string]Task) error {
-	path := h.GetTaskPath(file)
-
-	f, err := os.Create(path)
+func (h *Handler) LoadNotes(file string) (map[string]Note, error) {
+	data, err := loadJSON[Note](h, file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	defer f.Close()
-
-	enc := json.NewEncoder(f)
-	enc.SetIndent("", "    ")
-	if err := enc.Encode(tasks); err != nil {
-		return err
+	finalData := make(map[string]Note, len(data))
+	for id, noteValue := range data {
+		noteValue.ID = id         // Set the ID field on the copy
+		finalData[id] = noteValue // Store the task with its ID populated
 	}
-	return nil
+	return finalData, nil
+}
+
+func (h *Handler) SaveTasks(file string, tasks map[string]Task) error {
+	return saveJSON[Task](h, file, tasks)
+}
+
+func (h *Handler) SaveNotes(file string, notes map[string]Note) error {
+	return saveJSON[Note](h, file, notes)
 }
 
 func (h *Handler) SavePlanFile(file string, content string) error {
@@ -133,7 +164,7 @@ func (h *Handler) SaveBragFile(content string) error {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString("\n\n" + content + "\n")
+	_, err = f.WriteString("\n" + content + "\n")
 	return err
 }
 
@@ -153,7 +184,7 @@ func (h *Handler) ListAllProjects() ([]string, error) {
 	return filenames, nil
 }
 
-func (h *Handler) GetTaskPath(file string) string {
+func (h *Handler) GetPath(file string) string {
 	if !strings.HasSuffix(file, fileExt) {
 		file = file + fileExt
 	}

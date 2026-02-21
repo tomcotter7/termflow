@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) errorModeView() string {
@@ -18,14 +17,7 @@ func (m model) errorModeView() string {
 	s.WriteString("Press (q) to re-enter normal mode\n")
 
 	content := s.String()
-
-	contentHeight := strings.Count(content, "\n")
-
-	topPadding := (m.termHeight - contentHeight) / 8
-
-	style := lipgloss.NewStyle().Width(m.termWidth).Align(lipgloss.Center).Padding(topPadding).Bold(true)
-
-	return style.Render(content)
+	return m.centeredView(content)
 }
 
 func (m model) handleErrorModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {

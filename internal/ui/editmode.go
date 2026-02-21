@@ -9,7 +9,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/tomcotter7/termflow/internal/storage"
 )
 
@@ -24,20 +23,18 @@ func randomId() (string, error) {
 
 func (m model) editModeView() string {
 	content := m.createTaskForm.inputs.buildFormView()
-
-	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.termHeight - contentHeight) / 8
-
-	style := lipgloss.NewStyle().
-		Width(m.termWidth).
-		Align(lipgloss.Center).
-		PaddingTop(topPadding)
-
-	return style.Render(content)
+	return m.centeredView(content)
 }
 
 func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.termWidth = msg.Width
+		m.termHeight = msg.Height
+		m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+		m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
+		m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
+		m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
 	case tea.KeyMsg:
 
 		if msg.String() == "enter" && m.createTaskForm.inputs.onSubmitButton() {
@@ -102,8 +99,7 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Result:   m.createTaskForm.inputs.ta[1].Value(),
 			}
 			m.tasks[id] = newTask
-			m.handler.SaveTasks(m.activeProject+".json", m.tasks)
-			m.formattedTasks = formatTasks(m.tasks)
+			m.saveAndUpdateTasks()
 			m.mode = NormalMode
 
 			m.createTaskForm.inputs.reset()
@@ -117,12 +113,11 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.createTaskForm.inputs.reset()
 			m.createTaskForm.inputTaskId = ""
 			return m, nil
-		case "tab", "shift+tab":
-			if k == "shift+tab" {
-				m.createTaskForm.inputs.decreaseFocusedIndex()
-			} else {
-				m.createTaskForm.inputs.increaseFocusedIndex()
-			}
+		case "tab":
+			m.createTaskForm.inputs.increaseFocusedIndex()
+			return m, nil
+		case "shift+tab":
+			m.createTaskForm.inputs.decreaseFocusedIndex()
 			return m, nil
 		}
 	}

@@ -104,7 +104,7 @@ func (f *Form) updateInputs(msg tea.Msg) tea.Cmd {
 		f.ti[i], cmds[i] = f.ti[i].Update(msg)
 	}
 	for i := range f.ta {
-		f.ta[i], cmds[i] = f.ta[i].Update(msg)
+		f.ta[i], cmds[len(f.ti)+i] = f.ta[i].Update(msg)
 	}
 
 	return tea.Batch(cmds...)

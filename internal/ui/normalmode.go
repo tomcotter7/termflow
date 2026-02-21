@@ -54,10 +54,21 @@ func getLongestTaskLength(tasks map[string]storage.Task) int {
 	return maxLength
 }
 
+func (m *model) centeredView(content string) string {
+	contentHeight := strings.Count(content, "\n") + 1
+	topPadding := (m.termHeight - contentHeight) / 8
+	style := lipgloss.NewStyle().Width(m.termWidth).Align(lipgloss.Center).PaddingTop(topPadding)
+	return style.Render(content)
+}
+
 func (m *model) switchToEditMode(task storage.Task, focusIdx int) {
 	m.mode = EditMode
 	m.createTaskForm.PopulateFromTask(task)
 	m.createTaskForm.inputs.focusInput(focusIdx)
+	m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+	m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
+	m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
+	m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
 }
 
 func (m *model) saveAndUpdateTasks() {
@@ -138,6 +149,10 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.mode = EditMode
 			m.createTaskForm.inputs.focusInput(0)
 			m.createTaskForm.inputTaskId = ""
+			m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+			m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
+			m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
+			m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
 		case "e":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item.ID]; exists {
@@ -235,9 +250,13 @@ func (m model) renderTaskString(task storage.Task, i int, j int, space int, numC
 			return orangeText.Render(taskString)
 		}
 		return orangeTextRedBackground.Render(taskString)
-	} else {
+	}
+
+	if task.Blocked {
 		return redBackground.Render(taskString)
 	}
+
+	return taskString
 }
 
 func (m model) renderTasks(s *strings.Builder, space int, numColumns int) {
@@ -269,7 +288,7 @@ func (m model) normalModeView() string {
 
 	maxTaskLength := (m.termWidth - 8) / numColumns
 
-	minPadding := 0
+	minPadding := m.termWidth / 10
 	space := max(ll, len(tTitle), len(iTitle), len(rTitle), len(dTitle)) + minPadding
 
 	if maxTaskLength > 0 {
@@ -329,12 +348,5 @@ func (m model) normalModeView() string {
 	}
 
 	content := s.String()
-	contentHeight := strings.Count(content, "\n") + 1
-	topPadding := (m.termHeight - 4 - contentHeight) / 8
-	style := lipgloss.NewStyle().
-		Width(m.termWidth - 4).
-		Align(lipgloss.Center).
-		PaddingTop(topPadding)
-
-	return style.Render(content)
+	return lipgloss.Place(m.termWidth, m.termHeight, lipgloss.Center, lipgloss.Center, content)
 }
