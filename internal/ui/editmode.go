@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"strconv"
-	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,6 +25,45 @@ func (m model) editModeView() string {
 	return m.centeredView(content)
 }
 
+func get_date_diff(dow time.Weekday) string {
+	today := time.Now().Weekday()
+	diff := int(dow - today)
+	if diff <= 0 {
+		diff += 7
+	}
+	dd := time.Now().Add(time.Hour * 24 * time.Duration(diff)).Format("2006-01-02")
+	return dd
+}
+
+func get_true_datetime(datestring string) (string, error) {
+	var dd string
+	switch datestring {
+	case "today":
+		dd = time.Now().Format("2006-01-02")
+	case "tomorrow":
+		dd = time.Now().Add(24 * time.Hour).Format("2006-01-02")
+	case "monday", "mon":
+		dd = get_date_diff(time.Monday)
+	case "tuesday", "tues":
+		dd = get_date_diff(time.Tuesday)
+	case "wednesday", "wed":
+		dd = get_date_diff(time.Wednesday)
+	case "thursday", "thurs":
+		dd = get_date_diff(time.Thursday)
+	case "end-of-week", "friday", "fri":
+		dd = get_date_diff(time.Friday)
+	case "none":
+		dd = "none"
+	default:
+		date, err := time.Parse("2006-01-02", datestring)
+		if err != nil {
+			return "", err
+		}
+		dd = date.Format("2006-01-02")
+	}
+	return dd, nil
+}
+
 func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -38,33 +76,12 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 
 		if msg.String() == "enter" && m.createTaskForm.inputs.onSubmitButton() {
-			var dd string
-			switch strings.ToLower(m.createTaskForm.inputs.ti[1].Value()) {
-			case "today":
-				dd = time.Now().Format("2006-01-02")
-				m.createTaskForm.inputs.ti[1].SetValue(dd)
-			case "tomorrow":
-				dd = time.Now().Add(24 * time.Hour).Format("2006-01-02")
-				m.createTaskForm.inputs.ti[1].SetValue(dd)
-			case "end-of-week":
-				today := time.Now().Weekday()
-				friday := time.Friday
-				diff := int(friday - today)
-				if diff <= 0 {
-					diff += 7
-				}
-				dd = time.Now().Add(time.Hour * 24 * time.Duration(diff)).Format("2006-01-02")
-				m.createTaskForm.inputs.ti[1].SetValue(dd)
-			case "none":
-				dd = "none"
-			default:
-				date, err := time.Parse("2006-01-02", m.createTaskForm.inputs.ti[1].Value())
-				if err != nil {
-					m.createTaskForm.inputs.focusInput(1)
-					return m, nil
-				}
-				dd = date.Format("2006-01-02")
+			dd, err := get_true_datetime(m.createTaskForm.inputs.ti[1].Value())
+			if err != nil {
+				m.createTaskForm.inputs.focusInput(1)
+				return m, nil
 			}
+			m.createTaskForm.inputs.ti[1].SetValue(dd)
 
 			priority, err := strconv.Atoi(m.createTaskForm.inputs.ti[2].Value())
 			if err != nil {
