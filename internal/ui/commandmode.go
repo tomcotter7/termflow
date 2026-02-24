@@ -59,6 +59,10 @@ func (m *model) executeCommand(command string) {
 		m.projects.SetSize(m.termWidth-2, m.termHeight-2)
 		m.mode = SwitchProjectMode
 	case "brag":
+		m.addBragForm.inputs.ta[0].SetWidth(m.termWidth / 4)
+		m.addBragForm.inputs.ta[0].SetHeight(m.termHeight / 2)
+		m.addBragForm.tasksPager.Width = m.termWidth / 4
+		m.addBragForm.tasksPager.Height = m.termHeight / 2
 		m.addBragForm.tasksPager.SetContent(m.getRecentlyCompletedTasks(m.addBragForm.taskLookbackDays))
 		m.addBragForm.focusOnPager = false
 		m.addBragForm.inputs.focusInput(0)
@@ -88,7 +92,7 @@ func (m model) handleCommandModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.mode = NormalMode
 			return m, nil
 		case "enter":
-			command := m.commands.SelectedItem().FilterValue()
+			command := m.commands.SelectedItem().(item).Title()
 			m.executeCommand(command)
 			return m, nil
 		}

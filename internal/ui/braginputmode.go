@@ -41,22 +41,20 @@ func (m model) getRecentlyCompletedTasks(lookbackDays int) string {
 }
 
 func (m model) addBragModeView() string {
-	m.addBragForm.tasksPager.Width = m.termWidth / 4
-	m.addBragForm.tasksPager.Height = m.termHeight / 2
 	pager := fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.addBragForm.tasksPager.View(), m.footerView())
 	form := m.addBragForm.inputs.buildFormView()
 
 	if m.addBragForm.focusOnPager {
 		pager = lipgloss.NewStyle().BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("63")).Render(pager)
-		form = lipgloss.NewStyle().Height(m.termHeight / 2).BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("0")).Render(form)
+		form = lipgloss.NewStyle().BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("0")).Render(form)
 	} else {
 		pager = lipgloss.NewStyle().BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("0")).Render(pager)
-		form = lipgloss.NewStyle().Height(m.termHeight / 2).BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("63")).Render(form)
+		form = lipgloss.NewStyle().BorderStyle(lipgloss.ThickBorder()).BorderForeground(lipgloss.Color("63")).Render(form)
 	}
 
 	content := lipgloss.JoinHorizontal(lipgloss.Top, form, pager)
 
-	return lipgloss.NewStyle().Width(m.termWidth - 4).Align(lipgloss.Center).Render(content)
+	return lipgloss.NewStyle().Width(m.termWidth).Align(lipgloss.Center).PaddingTop(m.termHeight / 8).Render(content)
 }
 
 func (m model) headerView() string {
@@ -81,6 +79,10 @@ func (m model) handleAddBragModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.termHeight = msg.Height
 		m.termWidth = msg.Width
+		m.addBragForm.inputs.ta[0].SetHeight(m.termHeight / 2)
+		m.addBragForm.inputs.ta[0].SetWidth(m.termHeight / 4)
+		m.addBragForm.tasksPager.Width = m.termWidth / 4
+		m.addBragForm.tasksPager.Height = m.termHeight / 2
 	case tea.KeyMsg:
 		switch k := msg.String(); k {
 		case "ctrl+c":

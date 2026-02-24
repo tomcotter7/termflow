@@ -38,7 +38,7 @@ type item struct {
 
 func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
+func (i item) FilterValue() string { return i.title + " " + i.desc }
 
 type CreateProjectForm struct {
 	inputs Form
@@ -160,6 +160,7 @@ func createNotesListModel(notes map[string]storage.Note) list.Model {
 	}
 
 	delegate := list.NewDefaultDelegate()
+	delegate.SetHeight(16)
 	delegate.Styles.NormalTitle = delegate.Styles.NormalTitle.Foreground(lipgloss.Color("#555555"))
 
 	notesList := list.New(notesItems, delegate, 0, 0)
@@ -213,6 +214,7 @@ func newAddBragForm() AddBragForm {
 	text_areas := make([]textarea.Model, 1)
 	ta := textarea.New()
 	ta.Placeholder = "Brag Content"
+	ta.CharLimit = 0
 	text_areas[0] = ta
 
 	abf := AddBragForm{
@@ -227,6 +229,7 @@ func newAddNoteForm() AddNoteForm {
 	text_areas := make([]textarea.Model, 1)
 	ta := textarea.New()
 	ta.Placeholder = "Note Content..."
+	ta.CharLimit = 0
 	text_areas[0] = ta
 
 	anf := AddNoteForm{

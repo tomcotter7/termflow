@@ -211,7 +211,7 @@ func (m model) renderTaskString(task storage.Task, i int, j int, space int, numC
 	taskString := task.Desc
 
 	if task.Priority == 1 {
-		taskString = "!! " + taskString
+		taskString = "! " + taskString
 	}
 
 	if m.cursor.row == i && m.cursor.col == j {

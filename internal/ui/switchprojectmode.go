@@ -18,10 +18,10 @@ func (m model) handleSwitchProjectModeUpdates(msg tea.Msg) (tea.Model, tea.Cmd) 
 			m.mode = CommandMode
 			return m, nil
 		case "enter":
-			if m.projects.SelectedItem().FilterValue() == m.activeProject {
+			if m.projects.SelectedItem().(item).Title() == m.activeProject {
 				return m, nil
 			}
-			m.activeProject = m.projects.SelectedItem().FilterValue()
+			m.activeProject = m.projects.SelectedItem().(item).Title()
 			m.handler.SaveCurrent(m.activeProject)
 			sts, err := m.handler.LoadTasks(m.activeProject + ".json")
 			if err != nil {
