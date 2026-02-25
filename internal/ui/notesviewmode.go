@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -19,25 +20,41 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "q", "esc":
-			m.mode = CommandMode
-			return m, nil
-		case "enter":
+			if m.commands.FilterState() != list.Filtering {
+				m.mode = CommandMode
+				return m, nil
+			}
+		case "d":
 			selected := m.notesList.SelectedItem().(item)
 			id := selected.id
-			desc := selected.desc
 			delete(m.notes, id)
 			m.notesList = createNotesListModel(m.notes)
 			m.handler.SaveNotes(m.activeProject+"_notes.json", m.notes)
+		case "e":
+			selected := m.notesList.SelectedItem().(item)
+			desc := selected.desc
 
-			m.mode = EditMode
-			m.createTaskForm.inputs.focusInput(0)
-			m.createTaskForm.inputs.ta[0].SetValue(desc)
-			m.createTaskForm.inputTaskId = ""
-			m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
-			m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
-			m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
-			m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
+			m.addNoteForm.inputs.ta[0].SetValue(desc)
+			m.mode = AddNoteMode
+			m.addNoteForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+			m.addNoteForm.inputs.ta[0].SetHeight(m.termHeight / 2)
+			m.addNoteForm.inputs.focusInput(0)
 
+		case "enter":
+			if m.commands.FilterState() != list.Filtering {
+				selected := m.notesList.SelectedItem().(item)
+				desc := selected.desc
+				m.mode = EditMode
+				m.createTaskForm.inputs.focusInput(0)
+				m.createTaskForm.inputs.ta[0].SetValue(desc)
+				m.createTaskForm.inputTaskId = ""
+				m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+				m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
+				m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
+				m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
+
+				return m, nil
+			}
 		}
 
 	}

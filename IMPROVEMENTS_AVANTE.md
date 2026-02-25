@@ -7,7 +7,6 @@
 
 ## ⌨️ Simpler Keybindings
 
-1. **Space to Promote** - `Space` as an alias for promote (most common action should be easiest)
 2. **Number Keys for Priority** - `1`, `2`, `3` to set priority instantly without entering edit mode
 3. **Double-tap Escape** - Single `Esc` cancels current action, double-tap `Esc` quits app (prevents accidental exits)
 
@@ -17,7 +16,7 @@
 
 1. **Smart Defaults** - New tasks default to "today" priority if added in morning, "tomorrow" if added after 6pm
 2. **Auto-Archive** - Tasks in "done" for 7+ days automatically archive (configurable)
-3. **Inbox Column** - Optional "inbox" column for quick brain dumps, sort later
+- [X] **Inbox Column** - Optional "inbox" column for quick brain dumps, sort later
 4. **Batch Operations** - Select multiple tasks with `v` (visual mode) then promote/delete all at once
 
 ---
@@ -46,7 +45,7 @@
 ## 🔄 Natural Language Input
 
 1. **Smart Parsing** - `"Fix bug tomorrow !!"` auto-sets due date and priority
-2. **Relative Dates** - Support "today", "tomorrow", "next week", "friday"
+- [X] **Relative Dates** - Support "today", "tomorrow", "next week", "friday"
 4. **Tags Inline** - `#work` or `@john` parsed automatically from task text
 
 ---

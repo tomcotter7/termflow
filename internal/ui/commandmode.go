@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tomcotter7/termflow/internal/storage"
@@ -89,12 +90,16 @@ func (m model) handleCommandModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "q", "esc":
-			m.mode = NormalMode
-			return m, nil
+			if m.commands.FilterState() != list.Filtering {
+				m.mode = NormalMode
+				return m, nil
+			}
 		case "enter":
-			command := m.commands.SelectedItem().(item).Title()
-			m.executeCommand(command)
-			return m, nil
+			if m.commands.FilterState() != list.Filtering {
+				command := m.commands.SelectedItem().(item).Title()
+				m.executeCommand(command)
+				return m, nil
+			}
 		}
 	case tea.WindowSizeMsg:
 		h, v := listContainerStyle.GetFrameSize()

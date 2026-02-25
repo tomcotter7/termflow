@@ -158,8 +158,6 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if task, exists := m.tasks[item.ID]; exists {
 				m.switchToEditMode(task, 0)
 			}
-		case "s", "enter":
-			m.mode = ShowMode
 		case "t":
 			if len(m.formattedTasks[m.cursor.col]) == 0 {
 				return m, nil
@@ -342,7 +340,7 @@ func (m model) normalModeView() string {
 
 	if m.showHelp {
 		s.WriteString(helpStyle.Render("\nCommands:\n"))
-		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • s: (s)how • \nt: (t)oday • b: (b)locked • i: (i)gnore from .plan • q: (q)uit • ':': command-mode • ?: hide\n"))
+		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • \nt: (t)oday • b: (b)locked • i: (i)gnore from .plan • q: (q)uit • ':': command-mode • ?: hide\n"))
 	} else {
 		s.WriteString(helpStyle.Render("\n?: help\n"))
 	}
