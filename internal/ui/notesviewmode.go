@@ -39,6 +39,7 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.addNoteForm.inputs.ta[0].SetWidth(m.termWidth / 2)
 			m.addNoteForm.inputs.ta[0].SetHeight(m.termHeight / 2)
 			m.addNoteForm.inputs.focusInput(0)
+			m.addNoteForm.prevID = selected.id
 
 		case "enter":
 			if m.commands.FilterState() != list.Filtering {
@@ -52,6 +53,8 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
 				m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
 				m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
+
+				// NOTE; we do not delete the note here, user has to manually delete it.
 
 				return m, nil
 			}

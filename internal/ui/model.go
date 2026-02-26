@@ -67,6 +67,7 @@ type AddBragForm struct {
 
 type AddNoteForm struct {
 	inputs Form
+	prevID string
 }
 
 type model struct {

@@ -25,13 +25,23 @@ func (m model) handleAddNoteModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.addNoteForm.inputs.onSubmitButton() {
-				id, err := randomId()
-				if err != nil {
-					m.err = err
-					m.mode = ErrorMode
-					return m, nil
+
+				id := m.addNoteForm.prevID
+				var created string
+
+				if id != "" {
+					created = m.notes[id].Created
+				} else {
+					var err error
+					id, err = randomId()
+					if err != nil {
+						m.err = err
+						m.mode = ErrorMode
+						return m, nil
+					}
+					created = time.Now().Format("2006-01-02")
 				}
-				created := time.Now().Format("2006-01-02")
+
 				newNote := storage.Note{
 					ID:      id,
 					Created: created,
@@ -42,8 +52,8 @@ func (m model) handleAddNoteModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.handler.SaveNotes(m.activeProject+"_notes.json", m.notes)
 				m.mode = NormalMode
 				m.addNoteForm.inputs.reset()
+				m.addNoteForm.prevID = ""
 				return m, nil
-
 			}
 		case "esc":
 			m.mode = CommandMode
