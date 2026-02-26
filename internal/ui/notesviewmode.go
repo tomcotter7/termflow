@@ -30,6 +30,7 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			delete(m.notes, id)
 			m.notesList = createNotesListModel(m.notes)
 			m.handler.SaveNotes(m.activeProject+"_notes.json", m.notes)
+			return m, nil
 		case "e":
 			selected := m.notesList.SelectedItem().(item)
 			desc := selected.desc
@@ -40,6 +41,7 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.addNoteForm.inputs.ta[0].SetHeight(m.termHeight / 2)
 			m.addNoteForm.inputs.focusInput(0)
 			m.addNoteForm.prevID = selected.id
+			return m, nil
 
 		case "enter":
 			if m.commands.FilterState() != list.Filtering {
