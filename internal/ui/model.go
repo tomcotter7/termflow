@@ -151,6 +151,14 @@ func formatTasks(tasks map[string]storage.Task) [4][]storage.Task {
 	return fTasks
 }
 
+func notesSortFunc(a list.Item, b list.Item) int {
+	if a.(item).Title() < b.(item).Title() {
+		return -1
+	} else {
+		return 1
+	}
+}
+
 func createNotesListModel(notes map[string]storage.Note) list.Model {
 	notesItems := make([]list.Item, len(notes))
 
@@ -159,6 +167,8 @@ func createNotesListModel(notes map[string]storage.Note) list.Model {
 		notesItems[idx] = item{id: id, title: note.Created, desc: note.Content}
 		idx++
 	}
+
+	slices.SortFunc(notesItems, notesSortFunc)
 
 	delegate := list.NewDefaultDelegate()
 	delegate.SetHeight(16)
