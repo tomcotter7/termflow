@@ -52,6 +52,11 @@ func get_true_datetime(datestring string) (string, error) {
 		dd = get_date_diff(time.Thursday)
 	case "end-of-week", "friday", "fri":
 		dd = get_date_diff(time.Friday)
+	case "end-of-month":
+		now := time.Now()
+		firstOfNextMonth := time.Date(now.Year(), now.Month()+1, 1, 0, 0, 0, 0, now.Location())
+		lastOfThisMonth := firstOfNextMonth.Add(-time.Hour * 24)
+		dd = lastOfThisMonth.Format("2006-01-02")
 	case "none":
 		dd = "none"
 	default:
