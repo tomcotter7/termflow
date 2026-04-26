@@ -191,6 +191,11 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tasks[item.ID] = task
 				m.saveAndUpdateTasks()
 			}
+		case "n":
+			m.mode = AddNoteMode
+			m.addNoteForm.inputs.ta[0].SetWidth(m.termWidth / 2)
+			m.addNoteForm.inputs.ta[0].SetHeight(m.termHeight / 2)
+			m.addNoteForm.inputs.focusInput(0)
 		case "?":
 			m.showHelp = !m.showHelp
 		case ":":
@@ -340,7 +345,7 @@ func (m model) normalModeView() string {
 
 	if m.showHelp {
 		s.WriteString(helpStyle.Render("\nCommands:\n"))
-		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • \nt: (t)oday • b: (b)locked • i: (i)gnore from .plan • q: (q)uit • ':': command-mode • ?: hide\n"))
+		s.WriteString(helpStyle.Render("\na: (a)dd • p: (p)romote • r: (r)egress • d: (d)elete • e: (e)dit • \nt: (t)oday • b: (b)locked • i: (i)gnore from .plan • n: (n)ew note • q: (q)uit • ':': command-mode • ?: hide\n"))
 	} else {
 		s.WriteString(helpStyle.Render("\n?: help\n"))
 	}
