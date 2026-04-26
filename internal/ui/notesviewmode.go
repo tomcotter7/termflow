@@ -29,6 +29,7 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			id := selected.id
 			delete(m.notes, id)
 			m.notesList = createNotesListModel(m.notes)
+			m.notesList.SetSize(m.termWidth, m.termHeight)
 			m.handler.SaveNotes(m.activeProject+"_notes.json", m.notes)
 			return m, nil
 		case "e":

@@ -245,7 +245,7 @@ func newAddNoteForm() AddNoteForm {
 	text_areas[0] = ta
 
 	anf := AddNoteForm{
-		inputs: Form{ta: text_areas},
+		inputs: Form{ta: text_areas, taHidden: []bool{false}},
 	}
 
 	return anf
