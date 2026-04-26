@@ -74,23 +74,20 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.termWidth = msg.Width
 		m.termHeight = msg.Height
-		m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
-		m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
-		m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
-		m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
+		m.createTaskForm.inputs.updateTextAreas(m.termWidth, m.termHeight)
 	case tea.KeyMsg:
 
 		if msg.String() == "enter" && m.createTaskForm.inputs.onSubmitButton() {
-			dd, err := get_true_datetime(m.createTaskForm.inputs.ti[1].Value())
-			if err != nil {
-				m.createTaskForm.inputs.focusInput(1)
-				return m, nil
-			}
-			m.createTaskForm.inputs.ti[1].SetValue(dd)
-
-			priority, err := strconv.Atoi(m.createTaskForm.inputs.ti[2].Value())
+			dd, err := get_true_datetime(m.createTaskForm.inputs.ti[2].Value())
 			if err != nil {
 				m.createTaskForm.inputs.focusInput(2)
+				return m, nil
+			}
+			m.createTaskForm.inputs.ti[2].SetValue(dd)
+
+			priority, err := strconv.Atoi(m.createTaskForm.inputs.ti[3].Value())
+			if err != nil {
+				m.createTaskForm.inputs.focusInput(3)
 				return m, nil
 			}
 
@@ -110,15 +107,16 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			newTask := storage.Task{
-				ID:       id,
-				Status:   columnNames[m.cursor.col],
-				Desc:     m.createTaskForm.inputs.ti[0].Value(),
-				FullDesc: m.createTaskForm.inputs.ta[0].Value(),
-				Priority: priority,
-				Due:      dd,
-				Created:  created,
-				Blocked:  blocked,
-				Result:   m.createTaskForm.inputs.ta[1].Value(),
+				ID:         id,
+				Status:     columnNames[m.cursor.col],
+				Subproject: m.createTaskForm.inputs.ti[0].Value(),
+				Desc:       m.createTaskForm.inputs.ti[1].Value(),
+				FullDesc:   m.createTaskForm.inputs.ta[0].Value(),
+				Priority:   priority,
+				Due:        dd,
+				Created:    created,
+				Blocked:    blocked,
+				Result:     m.createTaskForm.inputs.ta[1].Value(),
 			}
 			m.tasks[id] = newTask
 			m.saveAndUpdateTasks()

@@ -48,7 +48,7 @@ func addPadding(ipt string, space int, title bool) string {
 func getLongestTaskLength(tasks map[string]storage.Task) int {
 	maxLength := 0
 	for _, v := range tasks {
-		maxLength = max(maxLength, len(v.Desc))
+		maxLength = max(maxLength, len(v.Subproject+": "+v.Desc))
 	}
 
 	return maxLength
@@ -65,10 +65,7 @@ func (m *model) switchToEditMode(task storage.Task, focusIdx int) {
 	m.mode = EditMode
 	m.createTaskForm.PopulateFromTask(task)
 	m.createTaskForm.inputs.focusInput(focusIdx)
-	m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
-	m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
-	m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
-	m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
+	m.createTaskForm.inputs.updateTextAreas(m.termWidth, m.termHeight)
 }
 
 func (m *model) saveAndUpdateTasks() {
@@ -122,6 +119,7 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.saveAndUpdateTasks()
 				m.cursor.IncCol(m.formattedTasks)
 				if m.cursor.col == len(columnNames)-1 {
+					m.createTaskForm.inputs.taHidden[1] = false
 					m.switchToEditMode(task, 4)
 				}
 			}
@@ -149,13 +147,12 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.mode = EditMode
 			m.createTaskForm.inputs.focusInput(0)
 			m.createTaskForm.inputTaskId = ""
-			m.createTaskForm.inputs.ta[0].SetWidth(m.termWidth / 2)
-			m.createTaskForm.inputs.ta[0].SetHeight(m.termHeight / 4)
-			m.createTaskForm.inputs.ta[1].SetWidth(m.termWidth / 2)
-			m.createTaskForm.inputs.ta[1].SetHeight(m.termHeight / 4)
+			m.createTaskForm.inputs.updateTextAreas(m.termWidth, m.termHeight)
+			m.createTaskForm.inputs.taHidden[1] = true
 		case "e":
 			item := m.formattedTasks[m.cursor.col][m.cursor.row]
 			if task, exists := m.tasks[item.ID]; exists {
+				m.createTaskForm.inputs.taHidden[1] = true
 				m.switchToEditMode(task, 0)
 			}
 		case "t":
@@ -207,6 +204,9 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) renderTaskString(task storage.Task, i int, j int, space int, numColumns int) string {
 	taskString := task.Desc
+	if task.Subproject != "" {
+		taskString = task.Subproject + ": " + taskString
+	}
 
 	if task.Priority == 1 {
 		taskString = "! " + taskString

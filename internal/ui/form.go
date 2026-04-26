@@ -13,7 +13,25 @@ import (
 type Form struct {
 	ti         []textinput.Model
 	ta         []textarea.Model
+	taHidden   []bool
 	focusedIdx int
+}
+
+func (f *Form) updateTextAreas(termWidth int, termHeight int) {
+	for i := range f.ta {
+		f.ta[i].SetWidth(termWidth / 2)
+		f.ta[i].SetHeight(termHeight / 4)
+	}
+}
+
+func (f Form) getTotalHiddenTextAreas() int {
+	totalHidden := 0
+	for i := range f.taHidden {
+		if f.taHidden[i] {
+			totalHidden++
+		}
+	}
+	return totalHidden
 }
 
 func (f Form) buildFormView() string {
@@ -25,11 +43,12 @@ func (f Form) buildFormView() string {
 	}
 	b.WriteRune('\n')
 	for i := range f.ta {
-		b.WriteString(f.ta[i].View())
-		if i < len(f.ta)-1 {
-			b.WriteRune('\n')
-			b.WriteRune('\n')
+		if f.taHidden[i] {
+			continue
 		}
+		b.WriteString(f.ta[i].View())
+		b.WriteRune('\n')
+		b.WriteRune('\n')
 	}
 
 	button := &blurredButton
@@ -56,6 +75,7 @@ func (f *Form) reset() {
 	for i := range f.ta {
 		f.ta[i].Reset()
 		f.ta[i].Blur()
+		f.taHidden[i] = false
 	}
 }
 
@@ -78,6 +98,9 @@ func (f *Form) focusInput(idx int) {
 		f.ti[idx].TextStyle = focusedStyle
 	} else if idx < len(f.ti)+len(f.ta) {
 		adjustedIdx := idx - len(f.ti)
+		if f.taHidden[adjustedIdx] {
+			return
+		}
 		f.ta[adjustedIdx].Focus()
 	}
 }
@@ -85,6 +108,9 @@ func (f *Form) focusInput(idx int) {
 func (f *Form) decreaseFocusedIndex() {
 	f.deFocusInput(f.focusedIdx)
 	f.focusedIdx = max(0, f.focusedIdx-1)
+	for f.focusedIdx >= len(f.ti) && f.focusedIdx < len(f.ti)+len(f.ta) && f.taHidden[f.focusedIdx-len(f.ti)] {
+		f.focusedIdx--
+	}
 	f.focusInput(f.focusedIdx)
 }
 
@@ -92,6 +118,9 @@ func (f *Form) increaseFocusedIndex() {
 	f.deFocusInput(f.focusedIdx)
 	f.focusedIdx = min(f.focusedIdx+1, len(f.ti)+len(f.ta))
 
+	for f.focusedIdx >= len(f.ti) && f.focusedIdx < len(f.ti)+len(f.ta) && f.taHidden[f.focusedIdx-len(f.ti)] {
+		f.focusedIdx++
+	}
 	if f.focusedIdx < len(f.ti)+len(f.ta) {
 		f.focusInput(f.focusedIdx)
 	}
@@ -104,6 +133,9 @@ func (f *Form) updateInputs(msg tea.Msg) tea.Cmd {
 		f.ti[i], cmds[i] = f.ti[i].Update(msg)
 	}
 	for i := range f.ta {
+		if f.taHidden[i] {
+			continue
+		}
 		f.ta[i], cmds[len(f.ti)+i] = f.ta[i].Update(msg)
 	}
 

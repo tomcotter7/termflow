@@ -51,9 +51,10 @@ type CreateTaskForm struct {
 
 func (f *CreateTaskForm) PopulateFromTask(task storage.Task) {
 	f.inputTaskId = task.ID
-	f.inputs.ti[0].SetValue(task.Desc)
-	f.inputs.ti[1].SetValue(task.Due)
-	f.inputs.ti[2].SetValue(strconv.Itoa(task.Priority))
+	f.inputs.ti[0].SetValue(task.Subproject)
+	f.inputs.ti[1].SetValue(task.Desc)
+	f.inputs.ti[2].SetValue(task.Due)
+	f.inputs.ti[3].SetValue(strconv.Itoa(task.Priority))
 	f.inputs.ta[0].SetValue(task.FullDesc)
 	f.inputs.ta[1].SetValue(task.Result)
 }
@@ -251,15 +252,17 @@ func newAddNoteForm() AddNoteForm {
 }
 
 func newCreateTaskForm() CreateTaskForm {
-	text_inputs := make([]textinput.Model, 3)
+	text_inputs := make([]textinput.Model, 4)
 	for i := range text_inputs {
 		t := textinput.New()
 		switch i {
 		case 0:
-			t.Placeholder = "Short Description"
+			t.Placeholder = "Subproject (optional)"
 		case 1:
-			t.Placeholder = "Due Date"
+			t.Placeholder = "Short Description"
 		case 2:
+			t.Placeholder = "Due Date"
+		case 3:
 			t.Placeholder = "Priority"
 		}
 		text_inputs[i] = t
@@ -276,7 +279,9 @@ func newCreateTaskForm() CreateTaskForm {
 	t2.CharLimit = 0
 	text_areas[1] = t2
 
-	cti := CreateTaskForm{inputs: Form{ti: text_inputs, ta: text_areas}}
+	hiddenTAs := []bool{false, true}
+
+	cti := CreateTaskForm{inputs: Form{ti: text_inputs, ta: text_areas, taHidden: hiddenTAs}}
 	return cti
 }
 

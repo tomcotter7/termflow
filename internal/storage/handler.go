@@ -28,6 +28,7 @@ const (
 type Task struct {
 	ID             string `json:"id,omitempty"`
 	Status         Status `json:"status"`
+	Subproject     string `json:"subproject,omitempty"`
 	Desc           string `json:"desc"`
 	FullDesc       string `json:"fulldesc"`
 	Created        string `json:"created"`
