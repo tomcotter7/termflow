@@ -177,7 +177,7 @@ func (h *Handler) ListAllProjects() ([]string, error) {
 
 	var filenames []string
 	for _, file := range files {
-		if strings.HasSuffix(file.Name(), fileExt) {
+		if strings.HasSuffix(file.Name(), fileExt) && strings.Contains(file.Name(), "_notes") == false {
 			filenames = append(filenames, strings.TrimSuffix(file.Name(), fileExt))
 		}
 	}
