@@ -88,7 +88,7 @@ func (m model) handleAddBragModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "esc":
-			m.mode = NormalMode
+			m.mode = CommandMode
 			return m, nil
 		case "right":
 			m.addBragForm.focusOnPager = true

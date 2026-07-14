@@ -129,7 +129,7 @@ func (m model) handleEditModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch k := msg.String(); k {
 		case "esc":
-			m.mode = NormalMode
+			m.mode = m.prevMode
 			m.createTaskForm.inputs.reset()
 			m.createTaskForm.inputTaskId = ""
 			return m, nil

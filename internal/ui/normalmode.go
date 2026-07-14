@@ -62,6 +62,7 @@ func (m *model) centeredView(content string) string {
 }
 
 func (m *model) switchToEditMode(task storage.Task, focusIdx int) {
+	m.prevMode = NormalMode
 	m.mode = EditMode
 	m.createTaskForm.PopulateFromTask(task)
 	m.createTaskForm.inputs.focusInput(focusIdx)

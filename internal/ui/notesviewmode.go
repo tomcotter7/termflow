@@ -48,6 +48,7 @@ func (m model) handleNotesViewModeUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.commands.FilterState() != list.Filtering {
 				selected := m.notesList.SelectedItem().(item)
 				desc := selected.desc
+				m.prevMode = NotesViewMode
 				m.mode = EditMode
 				m.createTaskForm.inputs.focusInput(0)
 				m.createTaskForm.inputs.ta[0].SetValue(desc)

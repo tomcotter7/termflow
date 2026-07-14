@@ -78,6 +78,7 @@ type model struct {
 	cursor         Cursor
 	notes          map[string]storage.Note
 	notesList      list.Model
+	prevMode       Mode
 	mode           Mode
 	showHelp       bool
 	commands       list.Model
@@ -230,7 +231,7 @@ func newAddBragForm() AddBragForm {
 	text_areas[0] = ta
 
 	abf := AddBragForm{
-		inputs:           Form{ti: text_inputs, ta: text_areas},
+		inputs:           Form{ti: text_inputs, ta: text_areas, taHidden: []bool{false}},
 		tasksPager:       viewport.New(10, 10),
 		taskLookbackDays: 7,
 	}
