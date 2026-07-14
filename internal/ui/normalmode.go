@@ -68,10 +68,22 @@ func (m *model) switchToEditMode(task storage.Task, focusIdx int) {
 	m.createTaskForm.inputs.updateTextAreas(m.termWidth, m.termHeight)
 }
 
-func (m *model) saveAndUpdateTasks() {
+func (m *model) saveAndUpdateTasks(tasks ...storage.Task) {
+	for _, t := range tasks {
+		m.tasks[t.ID] = t
+	}
 	m.formattedTasks = formatTasks(m.tasks)
 	filename := m.activeProject + ".json"
 	m.handler.SaveTasks(filename, m.tasks)
+}
+
+func (m *model) selectedTask() (storage.Task, bool) {
+	if len(m.formattedTasks[m.cursor.col]) <= m.cursor.row {
+		return storage.Task{}, false
+	}
+	item := m.formattedTasks[m.cursor.col][m.cursor.row]
+	task, exist := m.tasks[item.ID]
+	return task, exist
 }
 
 func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -106,17 +118,9 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "p":
-
-			if len(m.formattedTasks[m.cursor.col]) <= m.cursor.row {
-				return m, nil
-			}
-
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-
-			if task, exists := m.tasks[item.ID]; exists && m.cursor.col < len(columnNames)-1 {
+			if task, exists := m.selectedTask(); exists && m.cursor.col < len(columnNames)-1 {
 				task.Status = columnNames[m.cursor.col+1]
-				m.tasks[item.ID] = task
-				m.saveAndUpdateTasks()
+				m.saveAndUpdateTasks(task)
 				m.cursor.IncCol(m.formattedTasks)
 				if m.cursor.col == len(columnNames)-1 {
 					m.createTaskForm.inputs.taHidden[1] = false
@@ -125,22 +129,15 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "r":
-			if len(m.formattedTasks[m.cursor.col]) <= m.cursor.row {
-				return m, nil
-			}
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item.ID]; exists && m.cursor.col > 0 {
+			if task, exists := m.selectedTask(); exists && m.cursor.col > 0 {
 				task.Status = columnNames[m.cursor.col-1]
-				m.tasks[item.ID] = task
-				m.saveAndUpdateTasks()
+				m.saveAndUpdateTasks(task)
 				m.cursor.DecCol(m.formattedTasks)
 			}
 		case "b":
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item.ID]; exists {
+			if task, exists := m.selectedTask(); exists {
 				task.Blocked = !task.Blocked
-				m.tasks[item.ID] = task
-				m.saveAndUpdateTasks()
+				m.saveAndUpdateTasks(task)
 			}
 
 		case "a":
@@ -150,17 +147,12 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.createTaskForm.inputs.updateTextAreas(m.termWidth, m.termHeight)
 			m.createTaskForm.inputs.taHidden[1] = true
 		case "e":
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item.ID]; exists {
+			if task, exists := m.selectedTask(); exists {
 				m.createTaskForm.inputs.taHidden[1] = true
 				m.switchToEditMode(task, 0)
 			}
 		case "t":
-			if len(m.formattedTasks[m.cursor.col]) == 0 {
-				return m, nil
-			}
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item.ID]; exists {
+			if task, exists := m.selectedTask(); exists {
 
 				today := time.Now().Format("2006-01-02")
 
@@ -169,27 +161,27 @@ func (m model) handleNormalModelUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					task.Due = "none"
 				}
-
-				m.tasks[item.ID] = task
-				m.saveAndUpdateTasks()
+				m.saveAndUpdateTasks(task)
 			}
 		case "d":
-			if len(m.formattedTasks[m.cursor.col]) == 0 {
-				return m, nil
-			}
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			delete(m.tasks, item.ID)
-			m.saveAndUpdateTasks()
-		case "i":
-			if len(m.formattedTasks[m.cursor.col]) == 0 {
-				return m, nil
-			}
-
-			item := m.formattedTasks[m.cursor.col][m.cursor.row]
-			if task, exists := m.tasks[item.ID]; exists {
-				task.IgnoreFromPlan = !task.IgnoreFromPlan
-				m.tasks[item.ID] = task
+			if task, exists := m.selectedTask(); exists {
+				delete(m.tasks, task.ID)
 				m.saveAndUpdateTasks()
+			}
+		case "i":
+			if task, exists := m.selectedTask(); exists {
+				task.IgnoreFromPlan = !task.IgnoreFromPlan
+				m.saveAndUpdateTasks(task)
+			}
+		case "+":
+			if task, exists := m.selectedTask(); exists {
+				task.Priority = max(1, task.Priority-1)
+				m.saveAndUpdateTasks(task)
+			}
+		case "-":
+			if task, exists := m.selectedTask(); exists {
+				task.Priority = min(4, task.Priority+1)
+				m.saveAndUpdateTasks(task)
 			}
 		case "n":
 			m.mode = AddNoteMode

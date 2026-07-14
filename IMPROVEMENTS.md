@@ -3,9 +3,6 @@
 
 ## ✨ Feature Improvements
 
-1. **Search/Filter** - Press `/` to filter tasks by keyword across all columns
-2. **Quick Priority Adjust** - `+`/`-` keys to bump priority up/down without entering edit mode
-3. **Task Templates** - Save common task structures for quick creation
 4. **CLI Access** - Allow for adding/promoting/editing tasks/notes directly from the CLI for agents.
 5. **Smart Defaults** - New tasks default to "today" priority if added in morning, "tomorrow" if added after 6pm
 6. **Time Tracking Light** - Simple start/stop timer per task, no complexity
