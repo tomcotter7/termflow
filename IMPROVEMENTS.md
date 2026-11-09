@@ -10,6 +10,10 @@
 
 *Which of these is the best?* I would be worried about making super small tasks just to hit the counter/sumarry
 
+11. **Frictionless Capture** - Biggest real blocker: the add form has 6 fields, so adding a task *feels* like paperwork and tasks don't get entered. Ideas:
+    - **Inline syntax** - single-line quick-add parsed into fields, e.g. `proj: fix bug !2 due:today` → subproject `proj`, priority 2, due today. Only the description is required; tokens (`!n`, `due:`, `proj:`) are optional.
+    - **Smart defaults** - unfilled fields fall back to sensible defaults (Todo status, no due date, lowest priority) so a task can be captured with just a description and enriched later via `e`.
+
 8. **Weekly Summary** - Optional: "You completed 12 tasks this week" on Monday
 9. **Streak Counter** - Days in a row with at least one completed task
 10. **Velocity Hint** - Subtle indicator if you're completing more/fewer tasks than usual

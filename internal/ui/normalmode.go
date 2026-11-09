@@ -236,23 +236,43 @@ func (m model) renderTaskString(task storage.Task, i int, j int, space int, numC
 
 	}
 
-	if task.Due == time.Now().Format("2006-01-02") {
-		if !task.Blocked {
-			return blueText.Render(taskString)
-		}
-		return blueTextRedBackground.Render(taskString)
-	} else if task.Due < time.Now().Format("2006-01-02") {
-		if !task.Blocked {
-			return orangeText.Render(taskString)
-		}
-		return orangeTextRedBackground.Render(taskString)
-	}
-
+	addRedBackground := false
 	if task.Blocked {
-		return redBackground.Render(taskString)
+		addRedBackground = true
 	}
 
-	return taskString
+	due, err := time.ParseInLocation("2006-01-02", task.Due, time.Local)
+	if err != nil {
+		if addRedBackground {
+			return redBackground.Render(taskString)
+		}
+		return taskString
+	}
+
+	y, mo, d := time.Now().Date()
+	today := time.Date(y, mo, d, 0, 0, 0, 0, time.Local)
+
+	var style lipgloss.Style
+	switch {
+	case due.Before(today):
+		style = lateStyle
+	case due.Equal(today):
+		style = dueTodayStyle
+	case due.Before(today.AddDate(0, 0, 4)):
+		style = dueIn3DaysStyle
+	case due.Before(today.AddDate(0, 0, 6)):
+		style = dueIn5DaysStyle
+	default:
+		if addRedBackground {
+			return redBackground.Render(taskString)
+		}
+		return taskString
+	}
+
+	if addRedBackground {
+		style = style.Background(lipgloss.Color("#B33B3B"))
+	}
+	return style.Render(taskString)
 }
 
 func (m model) renderTasks(s *strings.Builder, space int, numColumns int) {
